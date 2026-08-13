@@ -70,24 +70,29 @@ export default function RadarCanvas({
       </div>
 
       <div
-        className="bg-surface-container border-outline-variant relative aspect-square w-full max-w-[min(95vw,75vh)] overflow-hidden rounded-lg border shadow-2xl lg:max-w-[800px]"
+        className="bg-surface-container border-outline-variant relative aspect-square w-full max-w-[min(95vw,75vh)] overflow-hidden rounded-lg border shadow-2xl lg:max-w-[600px]"
         onMouseMove={handleMouseMove}
       >
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
           style={{ backgroundImage: `url('${radarImage}')` }}
         ></div>
-
         {markers.map((marker) => {
           const isSelected = selectedMarkerId === marker.id;
+
+          // Função de segurança: Garante que o valor sempre termine com '%'
+          const formatCoord = (coord: string | number) => {
+            const strCoord = String(coord);
+            return strCoord.endsWith('%') ? strCoord : `${strCoord}%`;
+          };
 
           return (
             <button
               key={marker.id}
               onClick={(e) => onMarkerClick(marker, e)}
               className={`bg-surface-container absolute -mt-5 -ml-5 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
-              // Mantido o y e x padrão
-              style={{ top: marker.y, left: marker.x }}
+              // Aqui usamos a função de segurança que criamos acima
+              style={{ top: formatCoord(marker.y), left: formatCoord(marker.x) }}
             >
               <span
                 className="material-symbols-outlined text-xl"
@@ -101,7 +106,7 @@ export default function RadarCanvas({
               </span>
             </button>
           );
-        })}
+        })}{' '}
       </div>
     </main>
   );

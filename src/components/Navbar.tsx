@@ -3,8 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // O hook useLocation descobre a URL atual (ex: '/maps')
   const location = useLocation();
 
   const navItems = [
@@ -16,8 +14,8 @@ export default function Navbar() {
 
   return (
     <nav className="bg-surface-container/80 fixed top-0 z-50 w-full border-b border-white/10 shadow-[0_0_20px_rgba(246,174,45,0.1)] backdrop-blur-md">
-      <div className="md:px-margin-desktop max-w-container-max mx-auto flex h-16 w-full items-center justify-between px-4">
-        {/* Logo que retorna para a Home ("/") */}
+      <div className="max-w-container-max md:px-margin-desktop mx-auto flex h-16 w-full items-center justify-between px-4">
+        {/* Logo */}
         <div className="flex items-center gap-4 md:gap-8">
           <Link
             to="/"
@@ -31,17 +29,18 @@ export default function Navbar() {
             <span className="hidden sm:block">TACTICAL VAULT</span>
           </Link>
 
+          {/* Links Desktop */}
           <div className="hidden gap-6 md:flex">
             {navItems.map((item) => {
-              const isActive = location.pathname.includes(item.path);
+              const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.name}
                   to={item.path}
                   className={`border-b-2 pb-1 transition-all duration-300 ease-in-out active:scale-95 ${
                     isActive
-                      ? 'text-primary border-primary font-bold'
-                      : 'text-on-surface-variant hover:text-primary hover:border-primary/50 border-transparent font-medium'
+                      ? 'border-primary text-primary font-bold'
+                      : 'text-on-surface-variant hover:border-primary/50 hover:text-primary border-transparent font-medium'
                   }`}
                 >
                   {item.name}
@@ -51,17 +50,8 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Botões da direita */}
+        {/* Botões da direita (Upload removido daqui) */}
         <div className="flex items-center gap-3 md:gap-4">
-          <button className="bg-primary-container text-on-primary-container font-headline-md flex items-center gap-2 px-3 py-2 font-bold transition-all hover:shadow-[inset_0_0_0_2px_rgba(255,255,255,0.2)] md:px-6">
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              upload
-            </span>
-            <span className="hidden md:block">Upload Tactic</span>
-          </button>
           <div className="border-outline-variant hover:border-primary h-8 w-8 cursor-pointer overflow-hidden rounded-full border transition-colors">
             <img
               alt="User Profile Avatar"
@@ -80,7 +70,9 @@ export default function Navbar() {
 
       {/* Menu Mobile */}
       <div
-        className={`bg-surface-container-highest flex flex-col overflow-hidden border-b border-white/10 shadow-xl transition-all duration-300 ease-in-out md:hidden ${isMenuOpen ? 'max-h-64 px-4 py-2 opacity-100' : 'pointer-events-none max-h-0 opacity-0'}`}
+        className={`bg-surface-container-highest flex flex-col overflow-hidden border-b border-white/10 shadow-xl transition-all duration-300 ease-in-out md:hidden ${
+          isMenuOpen ? 'max-h-64 px-4 py-2 opacity-100' : 'pointer-events-none max-h-0 opacity-0'
+        }`}
       >
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -89,7 +81,11 @@ export default function Navbar() {
               key={item.name}
               to={item.path}
               onClick={() => setIsMenuOpen(false)}
-              className={`flex items-center gap-2 border-b border-white/5 py-2 transition-all duration-300 ${isActive ? 'text-primary translate-x-2 font-bold' : 'text-on-surface-variant hover:text-primary font-medium hover:translate-x-1'}`}
+              className={`flex items-center gap-2 border-b border-white/5 py-2 transition-all duration-300 ${
+                isActive
+                  ? 'text-primary translate-x-2 font-bold'
+                  : 'text-on-surface-variant hover:text-primary font-medium hover:translate-x-1'
+              }`}
             >
               {isActive && (
                 <span className="bg-primary inline-block h-1.5 w-1.5 rounded-full"></span>
