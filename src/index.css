@@ -1,0 +1,173 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Cores */
+  --color-primary-fixed: #ffddb0;
+  --color-tertiary-fixed: #ffdad6;
+  --color-surface-tint: #ffba46;
+  --color-surface-variant: #353534;
+  --color-surface-container: #201f1f;
+  --color-secondary-fixed: #d4e3ff;
+  --color-inverse-primary: #805600;
+  --color-surface: #131313;
+  --color-on-secondary-fixed: #001c39;
+  --color-on-primary-container: #674400;
+  --color-surface-dim: #131313;
+  --color-error-container: #93000a;
+  --color-surface-container-high: #2a2a2a;
+  --color-tertiary: #ffccc6;
+  --color-primary: #ffd08b;
+  --color-on-primary-fixed: #281800;
+  --color-surface-bright: #393939;
+  --color-inverse-on-surface: #313030;
+  --color-on-secondary: #00315d;
+  --color-on-error-container: #ffdad6;
+  --color-secondary: #a4c9ff;
+  --color-on-surface: #e5e2e1;
+  --color-surface-container-highest: #353534;
+  --color-on-background: #e5e2e1;
+  --color-on-primary: #442c00;
+  --color-primary-container: #f6ae2d;
+  --color-surface-container-low: #1c1b1b;
+  --color-on-tertiary-fixed: #410003;
+  --color-on-primary-fixed-variant: #614000;
+  --color-on-secondary-fixed-variant: #004883;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-on-tertiary: #680008;
+  --color-secondary-container: #0164b4;
+  --color-background: #131313;
+  --color-tertiary-fixed-dim: #ffb3ac;
+  --color-inverse-surface: #e5e2e1;
+  --color-outline-variant: #514534;
+  --color-error: #ffb4ab;
+  --color-primary-fixed-dim: #ffba46;
+  --color-on-tertiary-fixed-variant: #93000f;
+  --color-on-error: #690005;
+  --color-outline: #9e8e7a;
+  --color-secondary-fixed-dim: #a4c9ff;
+  --color-tertiary-container: #ffa49b;
+  --color-on-tertiary-container: #9c0011;
+  --color-on-surface-variant: #d6c4ae;
+  --color-on-secondary-container: #d0e1ff;
+
+  /* Arredondamentos */
+  --radius: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Espaçamentos Customizados */
+  --spacing-unit: 4px;
+  --spacing-margin-mobile: 16px;
+  --spacing-container-max: 1440px;
+  --spacing-gutter: 16px;
+  --spacing-margin-desktop: 32px;
+
+  /* Famílias de Fontes */
+  --font-headline-md: 'Chivo', sans-serif;
+  --font-headline-md-mobile: 'Chivo', sans-serif;
+  --font-display-lg: 'Chivo', sans-serif;
+  --font-data-label: 'JetBrains Mono', monospace;
+  --font-body-base: 'Inter', sans-serif;
+
+  /* Tamanhos e Pesos de Textos */
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 1.2;
+  --text-headline-md--letter-spacing: 0.02em;
+  --text-headline-md--font-weight: 700;
+
+  --text-headline-md-mobile: 20px;
+  --text-headline-md-mobile--line-height: 1.2;
+  --text-headline-md-mobile--font-weight: 700;
+
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 900;
+
+  --text-data-label: 12px;
+  --text-data-label--line-height: 1;
+  --text-data-label--letter-spacing: 0.05em;
+  --text-data-label--font-weight: 500;
+
+  --text-body-base: 16px;
+  --text-body-base--line-height: 1.6;
+  --text-body-base--font-weight: 400;
+}
+
+/* CSS Global do Projeto */
+body {
+  background-color: #121212;
+  color: #e5e2e1;
+  overflow-x: hidden;
+}
+
+.tactical-glass {
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.1);
+}
+
+.tactical-glow:hover {
+  box-shadow: 0 0 20px rgba(246, 174, 45, 0.2);
+}
+
+.scanline-bg {
+  background-image: linear-gradient(0deg, transparent 50%, rgba(0, 0, 0, 0.2) 50%);
+  background-size: 100% 4px;
+}
+
+.radar-ping {
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #121212;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f6ae2d;
+}
+
+/* Custom Utilities for Tactical UI */
+.radar-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.marker-glow {
+  box-shadow: 0 0 15px 0px rgba(246, 174, 45, 0.6);
+}
+
+.marker-active {
+  box-shadow: 0 0 25px 5px rgba(246, 174, 45, 0.8);
+  transform: scale(1.1);
+}
+
+.scanline {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.1)
+  );
+  background-size: 100% 4px;
+}
