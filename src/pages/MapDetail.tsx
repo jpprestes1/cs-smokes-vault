@@ -20,6 +20,7 @@ export default function MapDetail() {
   const [activeSide, setActiveSide] = useState('Terrorist');
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
 
   // NOVO ESTADO: Controla se o formulário está aberto
   const [isAddingTactic, setIsAddingTactic] = useState(false);
@@ -81,6 +82,8 @@ export default function MapDetail() {
         radarImage={currentMap?.radarImage}
         markers={visibleMarkers}
         selectedMarkerId={selectedMarker?.id}
+        coords={coords}
+        setCoords={setCoords}
         onMarkerClick={handleMarkerClick}
         onMapClick={handleClosePanel}
       />
@@ -91,6 +94,7 @@ export default function MapDetail() {
         isAdding={isAddingTactic} // NOVA PROP PARA O FORM
         mapId={mapId} // NOVA PROP PARA O FIREBASE SABER O MAPA
         markers={markers}
+        coords={coords}
         onSelectVideo={setSelectedVideo}
         onClose={handleClosePanel}
       />

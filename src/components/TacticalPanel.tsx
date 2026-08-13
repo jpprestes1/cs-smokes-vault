@@ -9,6 +9,7 @@ interface TacticalPanelProps {
   isAdding: boolean;
   mapId?: string;
   markers: MarkerData[];
+  coords: { x: number; y: number };
   onClose: () => void;
   onSelectVideo: (video: VideoData | null) => void;
 }
@@ -19,6 +20,7 @@ export default function TacticalPanel({
   isAdding,
   mapId,
   markers,
+  coords,
   onClose,
   onSelectVideo,
 }: TacticalPanelProps) {
@@ -31,7 +33,7 @@ export default function TacticalPanel({
       }`}
     >
       {isAdding ? (
-        <TacticForm mapId={mapId} markers={markers} onClose={onClose} />
+        <TacticForm mapId={mapId} markers={markers} coords={coords} onClose={onClose} />
       ) : marker ? (
         <>
           {/* Header compartilhado da exibição da Granada */}

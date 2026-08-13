@@ -11,12 +11,21 @@ const platformConfig = {
   instagram: { color: 'bg-fuchsia-600', icon: 'photo_camera' },
 };
 
-const getThumbnailUrl = (platform: string, embedUrl: string, fallbackThumb: string) => {
+const getThumbnailUrl = (
+  marker: MarkerData,
+  platform: string,
+  embedUrl: string,
+  fallbackThumb: string
+) => {
+  if (fallbackThumb && fallbackThumb.trim() !== '') {
+    return fallbackThumb;
+  }
+
   if (platform === 'youtube') {
     const videoId = embedUrl.split('/embed/')[1]?.split('?')[0];
     if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   }
-  return fallbackThumb;
+  return `/images/bg-${marker.type.toLowerCase()}-video.png`;
 };
 
 export default function TacticDetails({ marker, onSelectVideo }: TacticDetailsProps) {
@@ -40,7 +49,7 @@ export default function TacticDetails({ marker, onSelectVideo }: TacticDetailsPr
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                   style={{
-                    backgroundImage: `url('${getThumbnailUrl(video.platform, video.embedUrl, video.thumbnail)}')`,
+                    backgroundImage: `url('${getThumbnailUrl(marker, video.platform, video.embedUrl, video.thumbnail)}')`,
                   }}
                 ></div>
                 <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-transparent"></div>

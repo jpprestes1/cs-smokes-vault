@@ -5,7 +5,8 @@ import { type MarkerData } from '../data/markers'; // Importando a tipagem
 
 interface TacticFormProps {
   mapId?: string;
-  markers: MarkerData[]; // Adicionado para receber as granadas atuais e comparar distância
+  markers: MarkerData[];
+  coords: { x: number; y: number }; // Adicionado para receber as granadas atuais e comparar distância
   onClose: () => void;
 }
 
@@ -21,14 +22,15 @@ interface FormData {
   platform: string;
 }
 
-export default function TacticForm({ mapId, markers, onClose }: TacticFormProps) {
+export default function TacticForm({ mapId, markers, coords, onClose }: TacticFormProps) {
+  const isMobile = window.innerWidth < 768;
   const [formData, setFormData] = useState<FormData>({
     title: '',
     type: 'SMOKE',
     side: 'TERRORIST',
     diff: 'MEDIUM',
-    x: '',
-    y: '',
+    x: isMobile ? coords.x.toString() : '',
+    y: isMobile ? coords.y.toString() : '',
     desc: '',
     videoUrl: '',
     platform: 'youtube',

@@ -5,6 +5,8 @@ interface RadarCanvasProps {
   mapId?: string;
   radarImage?: string;
   markers: MarkerData[];
+  coords: { x: number; y: number };
+  setCoords: (coords: { x: number; y: number }) => void;
   selectedMarkerId?: string;
   onMarkerClick: (marker: MarkerData, e: React.MouseEvent) => void;
   onMapClick: () => void;
@@ -14,12 +16,12 @@ export default function RadarCanvas({
   mapId,
   radarImage,
   markers,
+  coords,
+  setCoords,
   selectedMarkerId,
   onMarkerClick,
   onMapClick,
 }: RadarCanvasProps) {
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
-
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
 
