@@ -5,6 +5,7 @@ import { mapsDatabase } from '../data/maps';
 import MapSideNav from '../components/MapSideNav';
 import RadarCanvas from '../components/RadarCanvas';
 import TacticalPanel from '../components/TacticalPanel';
+import MobileMenu from '../components/MobileMenu';
 
 import { useMarkers, type MarkerData, type VideoData } from '../data/markers';
 
@@ -67,6 +68,12 @@ export default function MapDetail() {
         setActiveSide={handleSideChange}
         onBack={() => navigate(-1)}
         onAddTactic={handleAddTacticClick} // NOVA PROP PASSADA PARA O MENU
+      />
+
+      <MobileMenu
+        activeSide={activeSide}
+        setActiveSide={handleSideChange}
+        onAddTactic={handleAddTacticClick}
       />
 
       <RadarCanvas
