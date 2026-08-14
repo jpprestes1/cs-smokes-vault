@@ -13,7 +13,7 @@ export default function MapSideNav({
   onBack,
   onAddTactic, // Extraindo a propriedade aqui
 }: MapSideNavProps) {
-  const sides = ['Terrorist', 'Counter-Terrorist', 'All Sides'];
+  const sides = ['All Sides', 'Terrorist', 'Counter-Terrorist'];
 
   return (
     <aside className="bg-surface-container-low/90 text-primary font-data-label text-data-label relative z-30 hidden w-64 flex-col border-r border-white/5 py-6 backdrop-blur-xl md:flex">

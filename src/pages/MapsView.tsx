@@ -21,7 +21,7 @@ export default function MapsView() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {mapsDatabase.map((map) => (
-            <MapCard key={map.id} name={map.name} grenades={map.grenades} image={map.image} />
+            <MapCard key={map.id} name={map.name} image={map.image} />
           ))}
         </div>
       </section>

@@ -17,7 +17,7 @@ export default function MapDetail() {
   const { markers } = useMarkers(mapId);
 
   // Estados Globais
-  const [activeSide, setActiveSide] = useState('Terrorist');
+  const [activeSide, setActiveSide] = useState('All Sides'); // <-- Novo estado para controlar o filtro de lado
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
@@ -33,34 +33,36 @@ export default function MapDetail() {
     if (activeSide === 'All Sides') return true;
     return marker.side === activeSide.toUpperCase();
   });
+  const [hoveredVideo, setHoveredVideo] = useState<VideoData | null>(null);
+  const isPanelOpen = selectedMarker !== null || isAddingTactic;
 
-  // Handlers
+  // Atualize os Handlers para limpar o hover
   const handleClosePanel = () => {
     setSelectedMarker(null);
     setSelectedVideo(null);
-    setIsAddingTactic(false); // Fecha o form ao clicar fora
+    setIsAddingTactic(false);
+    setHoveredVideo(null); // <-- Limpa o hover
   };
 
   const handleMarkerClick = (marker: MarkerData, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedMarker(marker);
     setSelectedVideo(null);
-    setIsAddingTactic(false); // Fecha o form se abrir uma granada
+    setIsAddingTactic(false);
+    setHoveredVideo(null); // <-- Limpa o hover
   };
 
-  // Handler customizado para a aba de Filtro
   const handleSideChange = (side: string) => {
     setActiveSide(side);
-    handleClosePanel(); // Fecha o vídeo/granada/form se estiver aberto ao trocar o filtro
+    handleClosePanel();
   };
 
-  // NOVO HANDLER: Abre o form de adicionar tática
   const handleAddTacticClick = () => {
     setSelectedMarker(null);
     setSelectedVideo(null);
     setIsAddingTactic(true);
+    setHoveredVideo(null); // <-- Limpa o hover
   };
-
   return (
     <div className="bg-background fixed top-16 left-0 z-30 flex h-[calc(100vh-64px)] w-full overflow-hidden">
       <MapSideNav
@@ -86,6 +88,8 @@ export default function MapDetail() {
         setCoords={setCoords}
         onMarkerClick={handleMarkerClick}
         onMapClick={handleClosePanel}
+        hoveredVideo={hoveredVideo}
+        isPanelOpen={isPanelOpen}
       />
 
       <TacticalPanel
@@ -96,6 +100,7 @@ export default function MapDetail() {
         markers={markers}
         coords={coords}
         onSelectVideo={setSelectedVideo}
+        onHoverVideo={setHoveredVideo}
         onClose={handleClosePanel}
       />
     </div>

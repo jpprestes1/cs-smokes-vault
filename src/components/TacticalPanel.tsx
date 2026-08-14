@@ -12,6 +12,7 @@ interface TacticalPanelProps {
   coords: { x: number; y: number };
   onClose: () => void;
   onSelectVideo: (video: VideoData | null) => void;
+  onHoverVideo: (video: VideoData | null) => void;
 }
 
 export default function TacticalPanel({
@@ -23,6 +24,7 @@ export default function TacticalPanel({
   coords,
   onClose,
   onSelectVideo,
+  onHoverVideo,
 }: TacticalPanelProps) {
   const isOpen = marker !== null || isAdding;
 
@@ -66,7 +68,11 @@ export default function TacticalPanel({
 
           <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
             {!selectedVideo ? (
-              <TacticDetails marker={marker} onSelectVideo={onSelectVideo} />
+              <TacticDetails
+                marker={marker}
+                onSelectVideo={onSelectVideo}
+                onHoverVideo={onHoverVideo}
+              />
             ) : (
               <TacticVideoPlayer video={selectedVideo} onBack={() => onSelectVideo(null)} />
             )}

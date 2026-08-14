@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { type MarkerData } from '../data/markers';
+import { type MarkerData, type VideoData } from '../data/markers';
 
 interface RadarCanvasProps {
   mapId?: string;
@@ -10,6 +9,8 @@ interface RadarCanvasProps {
   selectedMarkerId?: string;
   onMarkerClick: (marker: MarkerData, e: React.MouseEvent) => void;
   onMapClick: () => void;
+  hoveredVideo?: VideoData | null;
+  isPanelOpen?: boolean;
 }
 
 export default function RadarCanvas({
@@ -21,6 +22,8 @@ export default function RadarCanvas({
   selectedMarkerId,
   onMarkerClick,
   onMapClick,
+  hoveredVideo,
+  isPanelOpen,
 }: RadarCanvasProps) {
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -53,14 +56,16 @@ export default function RadarCanvas({
 
   return (
     <main
-      className="bg-surface-dim relative flex h-full w-full items-center justify-center overflow-hidden"
+      className={`bg-surface-dim relative flex h-full w-full items-center justify-center overflow-hidden transition-all duration-300 ease-out ${
+        isPanelOpen ? 'md:pr-[450px]' : 'pr-0'
+      }`}
       onClick={onMapClick}
     >
       <div className="radar-grid pointer-events-none absolute inset-0 opacity-30"></div>
 
       <div className="pointer-events-none absolute top-6 left-6 z-20 flex flex-col gap-2">
         <div className="bg-surface-container/90 text-primary font-data-label text-data-label rounded-sm border border-white/10 px-3 py-1 uppercase backdrop-blur">
-          LOC // {mapId?.toUpperCase()}
+          MAP // {mapId?.toUpperCase()}
         </div>
         <div className="font-data-label text-on-surface-variant text-xs">
           COORD:{' '}
@@ -92,8 +97,7 @@ export default function RadarCanvas({
             <button
               key={marker.id}
               onClick={(e) => onMarkerClick(marker, e)}
-              className={`bg-surface-container absolute -mt-5 -ml-5 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
-              // Aqui usamos a função de segurança que criamos acima
+              className={`bg-surface-container absolute -mt-5 -ml-5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
               style={{ top: formatCoord(marker.y), left: formatCoord(marker.x) }}
             >
               <span
@@ -103,12 +107,25 @@ export default function RadarCanvas({
                 {marker.type === 'SMOKE'
                   ? 'cloud'
                   : marker.type === 'FLASH'
-                    ? 'flash_on'
+                    ? 'flare'
                     : 'local_fire_department'}
               </span>
             </button>
           );
         })}{' '}
+        {hoveredVideo && hoveredVideo.throwX && hoveredVideo.throwY && (
+          <div
+            className="pointer-events-none absolute z-40 -mt-3 -ml-3 flex h-6 w-6 animate-pulse items-center justify-center rounded-full border-2 border-dashed border-white bg-white/20"
+            style={{
+              top: `${hoveredVideo.throwY}%`,
+              left: `${hoveredVideo.throwX}%`,
+            }}
+          >
+            <span className="material-symbols-outlined text-[12px] text-white">
+              accessibility_new
+            </span>
+          </div>
+        )}
       </div>
     </main>
   );

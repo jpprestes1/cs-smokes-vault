@@ -21,10 +21,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/maps" element={<MapsView />} />
-
-          {/* 2. ADICIONAR A ROTA DINÂMICA (O :mapId diz que é um parâmetro) */}
           <Route path="/maps/:mapId" element={<MapDetail />} />
-
           <Route path="/tactics" element={<ComingSoon />} />
           <Route path="/pro-strats" element={<ComingSoon />} />
           <Route path="/training" element={<ComingSoon />} />

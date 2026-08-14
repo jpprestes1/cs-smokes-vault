@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, getCountFromServer, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 export interface VideoData {
@@ -8,6 +8,8 @@ export interface VideoData {
   title: string;
   thumbnail: string;
   embedUrl: string;
+  throwX?: number; // <-- Adicionado
+  throwY?: number; // <-- Adicionado
 }
 
 export interface MarkerData {
@@ -21,6 +23,30 @@ export interface MarkerData {
   y: string;
   desc: string;
   videos: VideoData[];
+}
+
+export function useMapMarkerCount(mapId: string) {
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!mapId) return;
+
+    const fetchCount = async () => {
+      try {
+        const q = query(collection(db, 'markers'), where('mapId', '==', mapId));
+        // getCountFromServer vai no Firebase e conta os documentos sem baixá-los!
+        const snapshot = await getCountFromServer(q);
+        setCount(snapshot.data().count);
+      } catch (error) {
+        console.error(`Erro ao buscar contagem do mapa ${mapId}:`, error);
+        setCount(0);
+      }
+    };
+
+    fetchCount();
+  }, [mapId]);
+
+  return count;
 }
 
 // Hook agora aceita o mapId para baixar apenas as granadas do mapa atual (economiza leituras do Firebase!)

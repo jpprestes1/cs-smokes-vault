@@ -51,7 +51,7 @@ export default function Navbar() {
         </div>
 
         {/* Botões da direita (Upload removido daqui) */}
-        <div className="flex items-center gap-3 md:gap-4">
+        {/* <div className="flex items-center gap-3 md:gap-4">
           <div className="border-outline-variant hover:border-primary h-8 w-8 cursor-pointer overflow-hidden rounded-full border transition-colors">
             <img
               alt="User Profile Avatar"
@@ -65,7 +65,7 @@ export default function Navbar() {
           >
             <span className="material-symbols-outlined">{isMenuOpen ? 'close' : 'menu'}</span>
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Menu Mobile */}

@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
+import { useMapMarkerCount } from '../data/markers';
 
 interface MapCardProps {
   name: string;
-  grenades: string;
   image: string;
 }
 
-export default function MapCard({ name, grenades, image }: MapCardProps) {
+export default function MapCard({ name, image }: MapCardProps) {
   const mapSlug = name.toLowerCase().replace(/\s+/g, '-');
+
+  const realCount = useMapMarkerCount(mapSlug);
 
   return (
     <Link
@@ -24,7 +26,9 @@ export default function MapCard({ name, grenades, image }: MapCardProps) {
         <span className="font-headline-md-mobile text-headline-md-mobile text-primary-container font-bold tracking-wider">
           {name}
         </span>
-        <span className="font-data-label text-data-label text-on-surface-variant">{grenades}</span>
+        <span className="font-data-label text-data-label text-on-surface-variant">
+          {realCount !== null ? `${realCount} Grenades` : 'Loading...'}
+        </span>
       </div>
     </Link>
   );

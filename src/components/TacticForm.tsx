@@ -279,7 +279,7 @@ export default function TacticForm({ mapId, markers, coords, onClose }: TacticFo
             >
               <option value="youtube">YouTube</option>
               <option value="tiktok">TikTok</option>
-              <option value="instagram">Insta</option>
+              <option value="instagram">Instagram</option>
             </select>
             <input
               type="text"

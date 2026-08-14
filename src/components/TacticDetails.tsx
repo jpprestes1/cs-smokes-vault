@@ -3,6 +3,7 @@ import { type MarkerData, type VideoData } from '../data/markers';
 interface TacticDetailsProps {
   marker: MarkerData;
   onSelectVideo: (video: VideoData) => void;
+  onHoverVideo: (video: VideoData | null) => void;
 }
 
 const platformConfig = {
@@ -28,7 +29,7 @@ const getThumbnailUrl = (
   return `/images/bg-${marker.type.toLowerCase()}-video.png`;
 };
 
-export default function TacticDetails({ marker, onSelectVideo }: TacticDetailsProps) {
+export default function TacticDetails({ marker, onSelectVideo, onHoverVideo }: TacticDetailsProps) {
   return (
     <>
       <p className="font-body-base text-on-surface-variant text-sm">{marker.desc}</p>
@@ -44,6 +45,8 @@ export default function TacticDetails({ marker, onSelectVideo }: TacticDetailsPr
               key={video.id}
               onClick={() => onSelectVideo(video)}
               className="group flex cursor-pointer flex-col gap-2"
+              onMouseEnter={() => onHoverVideo(video)}
+              onMouseLeave={() => onHoverVideo(null)}
             >
               <div className="group-hover:border-primary relative aspect-[9/16] w-full overflow-hidden rounded-md border border-white/10 transition-colors">
                 <div
