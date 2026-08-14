@@ -17,6 +17,8 @@ interface FormData {
   diff: string;
   x: string;
   y: string;
+  throwX: string;
+  throwY: string;
   desc: string;
   videoUrl: string;
   platform: string;
@@ -31,6 +33,8 @@ export default function TacticForm({ mapId, markers, coords, onClose }: TacticFo
     diff: 'MEDIUM',
     x: isMobile ? coords.x.toString() : '',
     y: isMobile ? coords.y.toString() : '',
+    throwX: '',
+    throwY: '',
     desc: '',
     videoUrl: '',
     platform: 'youtube',
@@ -89,6 +93,8 @@ export default function TacticForm({ mapId, markers, coords, onClose }: TacticFo
             title: formData.title, // Usa o título da form para o vídeo
             thumbnail: '',
             embedUrl: formatEmbedUrl(formData.videoUrl, formData.platform),
+            throwX: Number(formData.throwX),
+            throwY: Number(formData.throwY),
           }
         : null;
 
@@ -218,6 +224,33 @@ export default function TacticForm({ mapId, markers, coords, onClose }: TacticFo
               placeholder="Ex: 50"
               value={formData.y}
               onChange={(e) => setFormData({ ...formData, y: e.target.value })}
+              className="bg-surface-variant/20 text-on-surface focus:border-primary rounded border border-white/10 p-2 text-sm outline-none"
+            />
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-on-surface-variant font-data-label text-xs">
+              THROW COORD X (%)
+            </span>
+            <input
+              type="number"
+              placeholder="Ex: 45"
+              value={formData.throwX}
+              onChange={(e) => setFormData({ ...formData, throwX: e.target.value })}
+              className="bg-surface-variant/20 text-on-surface focus:border-primary rounded border border-white/10 p-2 text-sm outline-none"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-on-surface-variant font-data-label text-xs">
+              THROW COORD Y (%)
+            </span>
+            <input
+              type="number"
+              placeholder="Ex: 50"
+              value={formData.throwY}
+              onChange={(e) => setFormData({ ...formData, throwY: e.target.value })}
               className="bg-surface-variant/20 text-on-surface focus:border-primary rounded border border-white/10 p-2 text-sm outline-none"
             />
           </label>
