@@ -10,6 +10,8 @@ export interface VideoData {
   embedUrl: string;
   throwX?: number; // <-- Adicionado
   throwY?: number; // <-- Adicionado
+  author: string;
+  difficulty?: string;
 }
 
 export interface MarkerData {
@@ -18,7 +20,6 @@ export interface MarkerData {
   side: string;
   type: 'SMOKE' | 'FLASH' | 'MOLOTOV';
   title: string;
-  diff: string;
   x: string;
   y: string;
   desc: string;

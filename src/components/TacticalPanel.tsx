@@ -43,7 +43,11 @@ export default function TacticalPanel({
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-on-surface-variant text-sm">
-                  cloud
+                  {marker.type === 'SMOKE'
+                    ? 'cloud'
+                    : marker.type === 'FLASH'
+                      ? 'flare'
+                      : 'local_fire_department'}
                 </span>
                 <span className="font-data-label text-data-label text-on-surface-variant bg-surface-variant/50 scanline rounded-sm px-2 py-0.5 tracking-widest uppercase">
                   {marker.type}
@@ -62,7 +66,7 @@ export default function TacticalPanel({
               onClick={onClose}
               className="text-on-surface-variant hover:text-primary bg-surface-variant/30 rounded p-1 transition-colors active:scale-95"
             >
-              <span className="material-symbols-outlined">close</span>
+              <span className="material-symbols-outlined p-1">close</span>
             </button>
           </div>
 

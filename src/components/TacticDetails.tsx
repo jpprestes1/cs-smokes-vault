@@ -40,46 +40,70 @@ export default function TacticDetails({ marker, onSelectVideo, onHoverVideo }: T
         </h4>
 
         <div className="grid grid-cols-2 gap-4">
-          {marker.videos?.map((video) => (
-            <div
-              key={video.id}
-              onClick={() => onSelectVideo(video)}
-              className="group flex cursor-pointer flex-col gap-2"
-              onMouseEnter={() => onHoverVideo(video)}
-              onMouseLeave={() => onHoverVideo(null)}
-            >
-              <div className="group-hover:border-primary relative aspect-[9/16] w-full overflow-hidden rounded-md border border-white/10 transition-colors">
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                  style={{
-                    backgroundImage: `url('${getThumbnailUrl(marker, video.platform, video.embedUrl, video.thumbnail)}')`,
-                  }}
-                ></div>
-                <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-transparent"></div>
-                <div
-                  className={`absolute top-2 right-2 flex items-center gap-1 rounded px-2 py-1 ${platformConfig[video.platform].color} text-[10px] font-bold tracking-wider text-white`}
-                >
-                  <span className="material-symbols-outlined text-[12px]">
-                    {platformConfig[video.platform].icon}
-                  </span>
-                  {video.platform.toUpperCase()}
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 backdrop-blur-sm">
-                    <span
-                      className="material-symbols-outlined text-white"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      play_arrow
+          {marker.videos?.map((video) => {
+            // Define uma cor visual de acordo com a dificuldade do vídeo
+            const getDiffColor = (diff?: string) => {
+              if (diff === 'EASY') return 'bg-green-500/90';
+              if (diff === 'HARD') return 'bg-red-500/90';
+              return 'bg-yellow-500/90'; // MEDIUM como padrão
+            };
+
+            return (
+              <div
+                key={video.id}
+                onClick={() => onSelectVideo(video)}
+                onMouseEnter={() => onHoverVideo(video)}
+                onMouseLeave={() => onHoverVideo(null)}
+                className="group flex cursor-pointer flex-col gap-2"
+              >
+                <div className="group-hover:border-primary relative aspect-[9/16] w-full overflow-hidden rounded-md border border-white/10 transition-colors">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                    style={{
+                      backgroundImage: `url('${getThumbnailUrl(marker, video.platform, video.embedUrl, video.thumbnail)}')`,
+                    }}
+                  ></div>
+                  <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-transparent"></div>
+
+                  {/* NOVO: Tag indicadora de Dificuldade no canto superior esquerdo */}
+                  <div
+                    className={`absolute top-2 left-2 rounded px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white shadow-sm ${getDiffColor(video.difficulty)}`}
+                  >
+                    {video.difficulty || 'MEDIUM'}
+                  </div>
+
+                  <div
+                    className={`absolute top-2 right-2 flex items-center gap-1 rounded px-2 py-1 ${platformConfig[video.platform].color} text-[10px] font-bold tracking-wider text-white`}
+                  >
+                    <span className="material-symbols-outlined text-[12px]">
+                      {platformConfig[video.platform].icon}
                     </span>
+                    {video.platform.toUpperCase()}
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 backdrop-blur-sm">
+                      <span
+                        className="material-symbols-outlined text-white"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        play_arrow
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <div className="flex flex-col">
+                  <span className="font-data-label text-on-surface group-hover:text-primary truncate text-xs transition-colors">
+                    {video.title}
+                  </span>
+                  {video.author && (
+                    <span className="font-data-label text-on-surface-variant truncate text-[10px]">
+                      by {video.author}
+                    </span>
+                  )}
+                </div>
               </div>
-              <span className="font-data-label text-on-surface group-hover:text-primary truncate text-xs transition-colors">
-                {video.title}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </>
