@@ -1,4 +1,4 @@
-import { type VideoData } from '../data/markers';
+import { type VideoData } from '../types';
 
 interface TacticVideoPlayerProps {
   video: VideoData;

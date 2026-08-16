@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { type MarkerData } from '../data/markers';
+import { db } from '../../../lib/firebase';
+import { type MarkerData, type TacticFormData } from '../types';
 
 import TacticFormSelector from './TacticFormSelector';
 import TacticFormManualFields from './TacticFormManualFields';
@@ -12,23 +12,6 @@ interface TacticFormProps {
   markers: MarkerData[];
   coords: { x: number; y: number };
   onClose: () => void;
-}
-
-export interface TacticFormData {
-  markerId: string;
-  title: string;
-  titleVideo: string;
-  type: string;
-  side: string;
-  x: string;
-  y: string;
-  throwX: string;
-  throwY: string;
-  desc: string;
-  videoUrl: string;
-  platform: string;
-  author: string;
-  difficulty?: string;
 }
 
 export default function TacticForm({ mapId, markers, coords, onClose }: TacticFormProps) {

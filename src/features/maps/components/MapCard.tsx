@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMapMarkerCount } from '../data/markers';
+import { useMapMarkerCount } from '../../tactics/hooks/useMarkers';
 
 interface MapCardProps {
   name: string;

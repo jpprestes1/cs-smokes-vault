@@ -1,4 +1,4 @@
-import { type MarkerData, type VideoData } from '../data/markers';
+import { type MarkerData, type VideoData } from '../types';
 import TacticForm from './TacticForm';
 import TacticDetails from './TacticDetails';
 import TacticVideoPlayer from './TacticVideoPlayer';

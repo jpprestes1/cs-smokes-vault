@@ -1,5 +1,5 @@
-import { type MarkerData } from '../data/markers';
-import { type TacticFormData } from './TacticForm';
+import { type MarkerData } from '../types';
+import { type TacticFormData } from '../types';
 
 interface TacticFormSelectorProps {
   markers: MarkerData[];

@@ -1,30 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getCountFromServer, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-
-export interface VideoData {
-  id: string;
-  platform: 'youtube' | 'tiktok' | 'instagram';
-  title: string;
-  thumbnail: string;
-  embedUrl: string;
-  throwX?: number; // <-- Adicionado
-  throwY?: number; // <-- Adicionado
-  author: string;
-  difficulty?: string;
-}
-
-export interface MarkerData {
-  id: string; // O Firestore usa strings dinâmicas (Hashes) como ID padrão
-  mapId: string;
-  side: string;
-  type: 'SMOKE' | 'FLASH' | 'MOLOTOV';
-  title: string;
-  x: string;
-  y: string;
-  desc: string;
-  videos: VideoData[];
-}
+import { db } from '../../../lib/firebase';
+import { type MarkerData } from '../types';
 
 export function useMapMarkerCount(mapId: string) {
   const [count, setCount] = useState<number | null>(null);

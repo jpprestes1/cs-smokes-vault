@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { mapsDatabase } from '../data/maps';
+import { mapsDatabase } from '../features/maps/data/maps';
 
-import MapSideNav from '../components/MapSideNav';
-import RadarCanvas from '../components/RadarCanvas';
-import TacticalPanel from '../components/TacticalPanel';
+import MapSideNav from '../features/maps/components/MapSideNav';
+import RadarCanvas from '../features/tactics/components/RadarCanvas';
+import TacticalPanel from '../features/tactics/components/TacticalPanel';
 import MobileMenu from '../components/MobileMenu';
 
-import { useMarkers, type MarkerData, type VideoData } from '../data/markers';
+import { useMarkers, type MarkerData, type VideoData } from '../features/tactics';
 
 export default function MapDetail() {
   const { mapId } = useParams();

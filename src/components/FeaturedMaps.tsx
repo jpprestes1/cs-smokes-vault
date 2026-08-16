@@ -1,5 +1,5 @@
-import MapCard from './MapCard';
-import { mapsDatabase } from '../data/maps';
+import MapCard from '../features/maps/components/MapCard';
+import { mapsDatabase } from '../features/maps/data/maps';
 
 export default function FeaturedMaps() {
   const featured = mapsDatabase.slice(0, 4);
