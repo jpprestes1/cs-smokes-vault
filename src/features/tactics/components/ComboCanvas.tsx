@@ -7,8 +7,9 @@ interface ComboCanvasProps {
   combos: ComboData[];
   coords: { x: number; y: number };
   setCoords: (coords: { x: number; y: number }) => void;
-  selectedComboId?: string;
-  onComboClick: (combo: ComboData, e: React.MouseEvent) => void;
+  selectedPos?: { x: number; y: number } | null;
+  activeCombo?: ComboData | null; // O combo que deve ter suas rotas desenhadas (Hover ou Selecionado)
+  onPositionClick: (pos: { x: number; y: number }, e: React.MouseEvent) => void;
   onMapClick: () => void;
   isPanelOpen?: boolean;
 }
@@ -19,8 +20,9 @@ export default function ComboCanvas({
   combos,
   coords,
   setCoords,
-  selectedComboId,
-  onComboClick,
+  selectedPos,
+  activeCombo,
+  onPositionClick,
   onMapClick,
   isPanelOpen,
 }: ComboCanvasProps) {
@@ -35,8 +37,13 @@ export default function ComboCanvas({
     });
   };
 
-  // Encontra os dados do combo selecionado
-  const selectedCombo = combos.find((c) => c.id === selectedComboId);
+  // Agrupa os combos pela posição inicial para evitar sobreposição de botões no radar
+  const uniquePositions = Array.from(new Set(combos.map((c) => `${c.startX},${c.startY}`))).map(
+    (key) => {
+      const [x, y] = key.split(',');
+      return { startX: Number(x), startY: Number(y) };
+    }
+  );
 
   return (
     <main
@@ -47,7 +54,6 @@ export default function ComboCanvas({
     >
       <div className="radar-grid pointer-events-none absolute inset-0 opacity-30"></div>
 
-      {/* Overlay de Informações (Canto Superior Esquerdo) */}
       <div className="pointer-events-none absolute top-6 left-6 z-20 flex flex-col gap-2">
         <div className="bg-surface-container/90 text-primary font-data-label text-data-label rounded-sm border border-white/10 px-3 py-1 uppercase backdrop-blur">
           EXECUTES // {mapId?.toUpperCase()}
@@ -69,14 +75,14 @@ export default function ComboCanvas({
           style={{ backgroundImage: `url('${radarImage}')` }}
         ></div>
 
-        {/* Camada SVG para as linhas tracejadas */}
-        {selectedCombo && (
+        {/* Camada SVG para as linhas tracejadas baseadas no activeCombo (Hover ou Click) */}
+        {activeCombo && (
           <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
-            {selectedCombo.targets.map((target, idx) => (
+            {activeCombo.targets.map((target, idx) => (
               <line
                 key={idx}
-                x1={`${selectedCombo.startX}%`}
-                y1={`${selectedCombo.startY}%`}
+                x1={`${activeCombo.startX}%`}
+                y1={`${activeCombo.startY}%`}
                 x2={`${target.endX}%`}
                 y2={`${target.endY}%`}
                 stroke="rgba(246,174,45,0.6)"
@@ -88,32 +94,31 @@ export default function ComboCanvas({
           </svg>
         )}
 
-        {/* Renderiza os Pontos de Início dos Combos */}
-        {combos.map((combo) => {
-          const isSelected = selectedComboId === combo.id;
+        {/* Renderiza os Pontos de Início agrupados */}
+        {uniquePositions.map((pos, idx) => {
+          const isSelected = selectedPos?.x === pos.startX && selectedPos?.y === pos.startY;
 
-          // Oculta os outros combos se um estiver selecionado, para manter a tela limpa
-          if (selectedComboId && !isSelected) return null;
+          if (selectedPos && !isSelected) return null;
 
           return (
             <button
-              key={combo.id}
-              onClick={(e) => onComboClick(combo, e)}
+              key={idx}
+              onClick={(e) => onPositionClick({ x: pos.startX, y: pos.startY }, e)}
               className={`bg-surface-container absolute -mt-4 -ml-4 flex h-6 w-6 cursor-pointer items-center justify-center rounded border-2 transition-all duration-300 ${
                 isSelected
-                  ? 'border-primary text-primary z-30 scale-110 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)]'
-                  : 'border-primary/60 text-primary/80 hover:border-primary hover:text-primary z-20 shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:scale-110'
+                  ? 'border-primary text-primary z-30 scale-140 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)]'
+                  : 'border-primary/60 text-primary/80 hover:border-primary hover:text-primary z-20 shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:scale-140'
               }`}
-              style={{ top: `${combo.startY}%`, left: `${combo.startX}%` }}
+              style={{ top: `${pos.startY}%`, left: `${pos.startX}%` }}
             >
-              <span className="material-symbols-outlined !text-[18px]">strategy</span>
+              <span className="material-symbols-outlined !text-[16px]">strategy</span>
             </button>
           );
         })}
 
-        {/* Renderiza as Granadas (Alvos) do Combo Selecionado */}
-        {selectedCombo &&
-          selectedCombo.targets.map((target, idx) => (
+        {/* Renderiza as Granadas (Alvos) do activeCombo */}
+        {activeCombo &&
+          activeCombo.targets.map((target, idx) => (
             <div
               key={`target-${idx}`}
               className="bg-surface-container border-primary/50 text-primary absolute z-20 -mt-3 -ml-3 flex h-6 w-6 items-center justify-center rounded-full border shadow-[0_0_10px_rgba(246,174,45,0.4)]"

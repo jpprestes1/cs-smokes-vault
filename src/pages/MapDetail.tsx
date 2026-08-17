@@ -9,6 +9,7 @@ import ComboCanvas from '../features/tactics/components/ComboCanvas';
 import MobileMenu from '../components/MobileMenu';
 import ComboDetails from '../features/tactics/components/ComboDetails';
 import TacticVideoPlayer from '../features/tactics/components/TacticVideoPlayer';
+import ComboList from '../features/tactics/components/ComboList';
 
 import {
   useCombos,
@@ -55,14 +56,32 @@ export default function MapDetail() {
 
   const [isEditingTactic, setIsEditingTactic] = useState(false); // NOVO ESTADO DE EDICAO
 
-  // Atualize os Handlers para limpar o hover
+  const [selectedComboPos, setSelectedComboPos] = useState<{ x: number; y: number } | null>(null);
+  const [hoveredCombo, setHoveredCombo] = useState<ComboData | null>(null);
+
+  // Filtra os combos que pertencem à posição clicada
+  const combosAtPosition = selectedComboPos
+    ? combos.filter((c) => c.startX === selectedComboPos.x && c.startY === selectedComboPos.y)
+    : [];
+
   const handleClosePanel = () => {
     setSelectedMarker(null);
+    setSelectedCombo(null);
+    setSelectedComboPos(null); // <-- Novo
+    setHoveredCombo(null); // <-- Novo
     setSelectedVideo(null);
     setIsAddingTactic(false);
-    setHoveredVideo(null);
-    setSelectedCombo(null);
     setIsEditingTactic(false);
+    setHoveredVideo(null);
+  };
+
+  const handlePositionClick = (pos: { x: number; y: number }, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedComboPos(pos);
+    setSelectedCombo(null);
+    setIsAddingTactic(false);
+    setIsEditingTactic(false);
+    setHoveredCombo(null);
   };
 
   const handleMarkerClick = (marker: MarkerData, e: React.MouseEvent) => {
@@ -166,16 +185,17 @@ export default function MapDetail() {
           <ComboCanvas
             mapId={mapId}
             radarImage={currentMap?.radarImage}
-            combos={combos} // <-- Agora recebe os combos reais do Firebase
-            selectedComboId={selectedCombo?.id}
+            combos={combos}
+            selectedPos={selectedComboPos}
+            activeCombo={hoveredCombo || selectedCombo}
             coords={coords}
             setCoords={setCoords}
-            onComboClick={handleComboClick}
+            onPositionClick={handlePositionClick} /* <--- ELA DEVE SER PASSADA AQUI */
             onMapClick={handleClosePanel}
-            isPanelOpen={isAddingTactic || selectedCombo !== null}
+            isPanelOpen={isAddingTactic || selectedComboPos !== null}
           />
 
-          {(isAddingTactic || selectedCombo !== null || isEditingTactic) && (
+          {(isAddingTactic || selectedComboPos !== null || isEditingTactic) && (
             <aside className="bg-surface-container/95 fixed top-16 right-0 z-40 flex h-[calc(100vh-64px)] w-full transform flex-col border-l border-white/10 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-transform duration-300 ease-out md:w-[450px]">
               {isAddingTactic || isEditingTactic ? (
                 <ComboForm
@@ -185,9 +205,53 @@ export default function MapDetail() {
                   initialData={isEditingTactic ? selectedCombo! : undefined}
                 />
               ) : selectedCombo ? (
-                <>
-                  {/* Header do Execute ... */}
-                  <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
+                <div className="flex h-full flex-col">
+                  <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-5">
+                    {/* Se houver mais de um combo na lista, mostra o botão de voltar. Senão, mostra apenas o texto EXECUTE */}
+                    {combosAtPosition.length > 1 ? (
+                      <button
+                        onClick={() => {
+                          setSelectedCombo(null);
+                          setSelectedVideo(null);
+                        }}
+                        className="text-on-surface-variant hover:text-primary flex items-center gap-1 text-xs font-bold transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">arrow_back</span> BACK
+                        TO LIST
+                      </button>
+                    ) : (
+                      <span className="font-data-label text-on-surface-variant text-xs font-bold tracking-widest uppercase">
+                        Execute Details
+                      </span>
+                    )}
+                    <button
+                      onClick={handleClosePanel}
+                      className="text-on-surface-variant hover:text-primary bg-surface-variant/30 rounded p-1 transition-colors active:scale-95"
+                    >
+                      <span className="material-symbols-outlined p-1">close</span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-1 flex-col overflow-y-auto p-6">
+                    <div className="mb-6 flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-on-surface-variant text-sm">
+                          strategy
+                        </span>
+                        <span className="font-data-label text-data-label text-on-surface-variant bg-surface-variant/50 scanline rounded-sm px-2 py-0.5 tracking-widest uppercase">
+                          EXECUTE
+                        </span>
+                        <span
+                          className={`font-data-label text-data-label ${selectedCombo.side === 'TERRORIST' ? 'text-primary border-primary/30 bg-primary/10' : 'text-secondary border-secondary/30 bg-secondary/10'} rounded-sm border px-2 py-0.5 tracking-widest uppercase`}
+                        >
+                          {selectedCombo.side}
+                        </span>
+                      </div>
+                      <h3 className="font-headline-md text-headline-md text-primary mt-1">
+                        {selectedCombo.title}
+                      </h3>
+                    </div>
+
                     {!selectedVideo ? (
                       <ComboDetails
                         combo={selectedCombo}
@@ -202,7 +266,14 @@ export default function MapDetail() {
                       />
                     )}
                   </div>
-                </>
+                </div>
+              ) : selectedComboPos ? (
+                <ComboList
+                  combos={combosAtPosition}
+                  onSelectCombo={setSelectedCombo}
+                  onHoverCombo={setHoveredCombo}
+                  onClose={handleClosePanel}
+                />
               ) : null}
             </aside>
           )}
