@@ -238,6 +238,7 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
             >
               <option value="youtube">YouTube</option>
               <option value="tiktok">TikTok</option>
+              <option value="instagram">Instagram</option>
             </select>
             <input
               type="text"
