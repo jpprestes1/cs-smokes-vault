@@ -1,3 +1,4 @@
+import React, { useState, useRef } from 'react';
 import { type MarkerData, type VideoData } from '../types';
 
 interface RadarCanvasProps {
@@ -25,15 +26,58 @@ export default function RadarCanvas({
   hoveredVideo,
   isPanelOpen,
 }: RadarCanvasProps) {
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+  const [zoom, setZoom] = useState(1);
 
-    // Calcula a posição relativa do mouse em porcentagem (0 a 100)
-    // Isso garante que a coordenada seja a mesma independente do tamanho da tela
+  // Estados para o Drag-to-Pan (Arrastar o mapa)
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [scrollPos, setScrollPos] = useState({ left: 0, top: 0 });
+
+  const handleZoomIn = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZoom((prev) => Math.min(prev + 0.25, 1.5));
+  };
+
+  const handleZoomOut = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZoom((prev) => Math.max(prev - 0.25, 1));
+  };
+
+  // Funções de Drag-to-Pan
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setDragStart({
+      x: e.pageX - scrollRef.current.offsetLeft,
+      y: e.pageY - scrollRef.current.offsetTop,
+    });
+    setScrollPos({
+      left: scrollRef.current.scrollLeft,
+      top: scrollRef.current.scrollTop,
+    });
+  };
+
+  const handleMouseUpOrLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleContainerMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const y = e.pageY - scrollRef.current.offsetTop;
+    const walkX = x - dragStart.x;
+    const walkY = y - dragStart.y;
+    scrollRef.current.scrollLeft = scrollPos.left - walkX;
+    scrollRef.current.scrollTop = scrollPos.top - walkY;
+  };
+
+  // Captura de coordenadas em porcentagem
+  const handleInnerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
     const xPercent = Math.round(((e.clientX - rect.left) / rect.width) * 100);
     const yPercent = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-
-    // Evita que os números passem de 100 ou fiquem negativos se o mouse sair rápido da div
     setCoords({
       x: Math.max(0, Math.min(100, xPercent)),
       y: Math.max(0, Math.min(100, yPercent)),
@@ -42,13 +86,11 @@ export default function RadarCanvas({
 
   const getMarkerStyles = (side: string, isSelected: boolean) => {
     const isCT = side === 'COUNTER-TERRORIST';
-
     if (isSelected) {
       return isCT
         ? 'border-secondary text-secondary scale-110 shadow-[0_0_25px_5px_rgba(164,201,255,0.5)] z-30'
         : 'border-primary text-primary scale-110 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)] z-30';
     }
-
     return isCT
       ? 'border-secondary/60 text-secondary/80 hover:scale-110 hover:border-secondary hover:text-secondary shadow-[0_0_15px_rgba(164,201,255,0.2)] hover:shadow-[0_0_15px_rgba(164,201,255,0.6)] z-10'
       : 'border-primary/60 text-primary/80 hover:scale-110 hover:border-primary hover:text-primary shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:shadow-[0_0_15px_rgba(246,174,45,0.6)] z-10';
@@ -70,62 +112,86 @@ export default function RadarCanvas({
         <div className="font-data-label text-on-surface-variant text-xs">
           COORD:{' '}
           <span className="font-mono">
-            {/* Atualizamos para mostrar o símbolo de % facilitando a cópia para o banco de dados */}
             X:{String(coords.x).padStart(2, '0')} Y:{String(coords.y).padStart(2, '0')}
           </span>
         </div>
       </div>
 
-      <div
-        className="bg-surface-container border-outline-variant relative aspect-square w-full max-w-[min(95vw,75vh)] overflow-hidden rounded-lg border shadow-2xl lg:max-w-[600px]"
-        onMouseMove={handleMouseMove}
-      >
+      <div className="border-outline-variant relative aspect-square w-full max-w-[min(95vw,75vh)] overflow-hidden rounded-lg border shadow-2xl lg:max-w-[600px]">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
-          style={{ backgroundImage: `url('${radarImage}')` }}
-        ></div>
-        {markers.map((marker) => {
-          const isSelected = selectedMarkerId === marker.id;
-
-          // Função de segurança: Garante que o valor sempre termine com '%'
-          const formatCoord = (coord: string | number) => {
-            const strCoord = String(coord);
-            return strCoord.endsWith('%') ? strCoord : `${strCoord}%`;
-          };
-
-          return (
-            <button
-              key={marker.id}
-              onClick={(e) => onMarkerClick(marker, e)}
-              className={`bg-surface-container absolute -mt-5 -ml-5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
-              style={{ top: formatCoord(marker.y), left: formatCoord(marker.x) }}
-            >
-              <span
-                className="material-symbols-outlined !text-[18px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                {marker.type === 'SMOKE'
-                  ? 'cloud'
-                  : marker.type === 'FLASH'
-                    ? 'flare'
-                    : 'local_fire_department'}
-              </span>
-            </button>
-          );
-        })}{' '}
-        {hoveredVideo && hoveredVideo.throwX && hoveredVideo.throwY && (
+          ref={scrollRef}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
+          onMouseMove={handleContainerMouseMove}
+          className={`bg-surface-container hide-scrollbar h-full w-full overflow-auto ${isDragging ? 'cursor-grabbing' : 'cursor-crosshair'}`}
+        >
           <div
-            className="pointer-events-none absolute z-40 -mt-3 -ml-3 flex h-6 w-6 animate-pulse items-center justify-center rounded-full border-2 border-dashed border-white bg-white/20"
-            style={{
-              top: `${hoveredVideo.throwY}%`,
-              left: `${hoveredVideo.throwX}%`,
-            }}
+            className="relative aspect-square transition-all duration-300 ease-out"
+            style={{ width: `${zoom * 100}%` }}
+            onMouseMove={handleInnerMouseMove}
           >
-            <span className="material-symbols-outlined text-[12px] text-white">
-              accessibility_new
-            </span>
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
+              style={{ backgroundImage: `url('${radarImage}')` }}
+            ></div>
+
+            {markers.map((marker) => {
+              const isSelected = selectedMarkerId === marker.id;
+              const formatCoord = (coord: string | number) => {
+                const strCoord = String(coord);
+                return strCoord.endsWith('%') ? strCoord : `${strCoord}%`;
+              };
+              return (
+                <button
+                  key={marker.id}
+                  onClick={(e) => onMarkerClick(marker, e)}
+                  className={`bg-surface-container absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
+                  style={{ top: formatCoord(marker.y), left: formatCoord(marker.x) }}
+                >
+                  <span
+                    className="material-symbols-outlined text-xl"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    {marker.type === 'SMOKE'
+                      ? 'cloud'
+                      : marker.type === 'FLASH'
+                        ? 'flare'
+                        : 'local_fire_department'}
+                  </span>
+                </button>
+              );
+            })}
+
+            {hoveredVideo && hoveredVideo.throwX && hoveredVideo.throwY && (
+              <div
+                className="pointer-events-none absolute z-40 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 animate-pulse items-center justify-center rounded-full border-2 border-dashed border-white bg-white/20"
+                style={{ top: `${hoveredVideo.throwY}%`, left: `${hoveredVideo.throwX}%` }}
+              >
+                <span className="material-symbols-outlined text-[12px] text-white">
+                  accessibility_new
+                </span>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        <div className="absolute right-4 bottom-4 z-40 flex flex-col gap-2">
+          <button
+            onClick={handleZoomIn}
+            disabled={zoom >= 1.5}
+            className="bg-surface-container-highest text-on-surface hover:text-primary flex h-8 w-8 items-center justify-center rounded border border-white/10 shadow-lg transition-colors disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+          </button>
+          <button
+            onClick={handleZoomOut}
+            disabled={zoom <= 1}
+            className="bg-surface-container-highest text-on-surface hover:text-primary flex h-8 w-8 items-center justify-center rounded border border-white/10 shadow-lg transition-colors disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-sm">remove</span>
+          </button>
+        </div>
       </div>
     </main>
   );
