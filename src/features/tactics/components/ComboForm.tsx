@@ -1,33 +1,37 @@
 import { useState } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import { type ComboTarget } from '../types';
+import { type ComboTarget, type ComboData } from '../types';
 import { formatEmbedUrl } from '../../../utils/videoFormatting';
 
 interface ComboFormProps {
   mapId?: string;
-  coords?: { x: number; y: number }; // Mantido na tipagem apenas para não quebrar propriedades passadas pelo pai
+  coords?: { x: number; y: number };
   onClose: () => void;
+  initialData?: ComboData; // Propriedade de edição
 }
 
-export default function ComboForm({ mapId, onClose }: ComboFormProps) {
+export default function ComboForm({ mapId, onClose, initialData }: ComboFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const [title, setTitle] = useState('');
-  const [side, setSide] = useState('TERRORIST');
-  const [desc, setDesc] = useState('');
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [side, setSide] = useState(initialData?.side || 'TERRORIST');
+  const [desc, setDesc] = useState(initialData?.desc || '');
+  const [startX, setStartX] = useState(initialData?.startX.toString() || '');
+  const [startY, setStartY] = useState(initialData?.startY.toString() || '');
 
-  // Coordenadas iniciais agora usam string temporariamente para permitir inputs vazios antes de enviar
-  const [startX, setStartX] = useState('');
-  const [startY, setStartY] = useState('');
-
-  // Targets com endX e endY como string para lidar melhor com o input nativo
+  // Carrega os alvos existentes na edição ou inicia vazio na criação
   const [targets, setTargets] = useState<
     Array<{ type: 'SMOKE' | 'FLASH' | 'MOLOTOV'; endX: string; endY: string }>
-  >([]);
+  >(
+    initialData?.targets.map((t) => ({
+      type: t.type,
+      endX: t.endX.toString(),
+      endY: t.endY.toString(),
+    })) || []
+  );
 
-  // Campos do Vídeo
   const [videoUrl, setVideoUrl] = useState('');
   const [platform, setPlatform] = useState('youtube');
   const [author, setAuthor] = useState('');
@@ -53,28 +57,64 @@ export default function ComboForm({ mapId, onClose }: ComboFormProps) {
   };
 
   const handleSubmit = async () => {
-    if (!title || !startX || !startY || targets.length === 0 || !videoUrl) {
-      showToast('Preencha título, posição inicial, alvos e vídeo.', 'error');
+    if (!title || !startX || !startY || targets.length === 0) {
+      showToast('Preencha título, posição inicial e alvos.', 'error');
+      return;
+    }
+
+    if (!initialData && !videoUrl) {
+      showToast('O vídeo é obrigatório para novos combos.', 'error');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const newVideo = {
-        id: crypto.randomUUID(),
-        platform: platform as any,
-        title: title,
-        thumbnail: '',
-        embedUrl: formatEmbedUrl(videoUrl, platform),
-        author: author.replace(/^@+/, '').trim(),
-      };
-
-      // Converte as strings dos inputs de volta para números antes de salvar
       const formattedTargets: ComboTarget[] = targets.map((t) => ({
         type: t.type,
         endX: Number(t.endX),
         endY: Number(t.endY),
       }));
+
+      // MODO EDIÇÃO
+      if (initialData) {
+        const updatePayload: any = {
+          title,
+          side,
+          startX: Number(startX),
+          startY: Number(startY),
+          targets: formattedTargets,
+          desc,
+        };
+
+        if (videoUrl) {
+          const newVideo = {
+            id: crypto.randomUUID(),
+            platform: platform as any,
+            title,
+            thumbnail: '',
+            embedUrl: formatEmbedUrl(videoUrl, platform),
+            author: author.replace(/^@+/, '').trim(),
+            difficulty: 'MEDIUM',
+          };
+          updatePayload.videos = arrayUnion(newVideo);
+        }
+
+        await updateDoc(doc(db, 'combos', initialData.id), updatePayload);
+        showToast('Combo atualizado com sucesso!', 'success');
+        setTimeout(() => onClose(), 1500);
+        return;
+      }
+
+      // MODO CRIAÇÃO
+      const newVideo = {
+        id: crypto.randomUUID(),
+        platform: platform as any,
+        title,
+        thumbnail: '',
+        embedUrl: formatEmbedUrl(videoUrl, platform),
+        author: author.replace(/^@+/, '').trim(),
+        difficulty: 'MEDIUM',
+      };
 
       await addDoc(collection(db, 'combos'), {
         mapId,
@@ -91,7 +131,7 @@ export default function ComboForm({ mapId, onClose }: ComboFormProps) {
       setTimeout(() => onClose(), 1500);
     } catch (error) {
       console.error(error);
-      showToast('Erro ao salvar combo.', 'error');
+      showToast('Erro ao salvar.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -103,13 +143,17 @@ export default function ComboForm({ mapId, onClose }: ComboFormProps) {
         <div
           className={`absolute top-4 left-1/2 z-50 flex w-[95%] -translate-x-1/2 items-center gap-2 rounded px-4 py-3 shadow-xl transition-all ${toast.type === 'success' ? 'bg-green-900/95 text-green-400' : 'bg-red-900/95 text-red-400'}`}
         >
+          <span className="material-symbols-outlined text-[18px]">
+            {toast.type === 'success' ? 'check_circle' : 'error'}
+          </span>
           <span className="font-data-label text-xs tracking-wide">{toast.message}</span>
         </div>
       )}
 
       <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-5">
         <h3 className="font-headline-md text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined">strategy</span> ADD COMBO
+          <span className="material-symbols-outlined">{initialData ? 'edit' : 'strategy'}</span>
+          {initialData ? 'EDIT COMBO' : 'ADD COMBO'}
         </h3>
         <button
           onClick={onClose}
@@ -194,7 +238,6 @@ export default function ComboForm({ mapId, onClose }: ComboFormProps) {
             >
               <option value="youtube">YouTube</option>
               <option value="tiktok">TikTok</option>
-              <option value="instagram">Instagram</option>
             </select>
             <input
               type="text"
@@ -278,7 +321,7 @@ export default function ComboForm({ mapId, onClose }: ComboFormProps) {
           disabled={isSubmitting}
           className={`font-headline-md mt-4 flex justify-center gap-2 rounded py-3 font-bold transition-transform ${isSubmitting ? 'bg-surface-variant text-on-surface-variant' : 'bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(246,174,45,0.4)] active:scale-95'}`}
         >
-          {isSubmitting ? 'SAVING...' : 'PUBLISH COMBO'}
+          {isSubmitting ? 'SAVING...' : initialData ? 'UPDATE COMBO' : 'PUBLISH COMBO'}
         </button>
       </div>
     </div>

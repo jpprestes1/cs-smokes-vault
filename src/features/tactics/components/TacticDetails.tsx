@@ -1,9 +1,12 @@
 import { type MarkerData, type VideoData } from '../types';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 interface TacticDetailsProps {
   marker: MarkerData;
   onSelectVideo: (video: VideoData) => void;
   onHoverVideo: (video: VideoData | null) => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 const platformConfig = {
@@ -18,10 +21,7 @@ const getThumbnailUrl = (
   embedUrl: string,
   fallbackThumb: string
 ) => {
-  if (fallbackThumb && fallbackThumb.trim() !== '') {
-    return fallbackThumb;
-  }
-
+  if (fallbackThumb && fallbackThumb.trim() !== '') return fallbackThumb;
   if (platform === 'youtube') {
     const videoId = embedUrl.split('/embed/')[1]?.split('?')[0];
     if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
@@ -29,7 +29,17 @@ const getThumbnailUrl = (
   return `/images/bg-${marker.type.toLowerCase()}-video.png`;
 };
 
-export default function TacticDetails({ marker, onSelectVideo, onHoverVideo }: TacticDetailsProps) {
+export default function TacticDetails({
+  marker,
+  onSelectVideo,
+  onHoverVideo,
+  onEdit,
+  onDelete,
+}: TacticDetailsProps) {
+  const { role } = useAuth();
+  const canEdit = role === 'ADMIN' || role === 'CREATOR';
+  const canDelete = role === 'ADMIN';
+
   return (
     <>
       <p className="font-body-base text-on-surface-variant text-sm">{marker.desc}</p>
@@ -38,16 +48,13 @@ export default function TacticDetails({ marker, onSelectVideo, onHoverVideo }: T
         <h4 className="font-data-label text-data-label text-on-surface-variant mb-4 border-b border-white/10 pb-2">
           AVAILABLE GUIDES
         </h4>
-
         <div className="grid grid-cols-2 gap-4">
           {marker.videos?.map((video) => {
-            // Define uma cor visual de acordo com a dificuldade do vídeo
             const getDiffColor = (diff?: string) => {
               if (diff === 'EASY') return 'bg-green-500/90';
               if (diff === 'HARD') return 'bg-red-500/90';
-              return 'bg-yellow-500/90'; // MEDIUM como padrão
+              return 'bg-yellow-500/90';
             };
-
             return (
               <div
                 key={video.id}
@@ -64,19 +71,16 @@ export default function TacticDetails({ marker, onSelectVideo, onHoverVideo }: T
                     }}
                   ></div>
                   <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-transparent"></div>
-
-                  {/* NOVO: Tag indicadora de Dificuldade no canto superior esquerdo */}
                   <div
                     className={`absolute top-2 left-2 rounded px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white shadow-sm ${getDiffColor(video.difficulty)}`}
                   >
                     {video.difficulty || 'MEDIUM'}
                   </div>
-
                   <div
-                    className={`absolute top-2 right-2 flex items-center gap-1 rounded px-2 py-1 ${platformConfig[video.platform].color} text-[10px] font-bold tracking-wider text-white`}
+                    className={`absolute top-2 right-2 flex items-center gap-1 rounded px-2 py-1 ${platformConfig[video.platform as keyof typeof platformConfig].color} text-[10px] font-bold tracking-wider text-white`}
                   >
                     <span className="material-symbols-outlined text-[12px]">
-                      {platformConfig[video.platform].icon}
+                      {platformConfig[video.platform as keyof typeof platformConfig].icon}
                     </span>
                     {video.platform.toUpperCase()}
                   </div>
@@ -106,6 +110,28 @@ export default function TacticDetails({ marker, onSelectVideo, onHoverVideo }: T
           })}
         </div>
       </div>
+
+      {/* Botões de Ação Administrativa */}
+      {(canEdit || canDelete) && (
+        <div className="mt-auto flex gap-2 border-t border-white/10 pt-4">
+          {canEdit && (
+            <button
+              onClick={onEdit}
+              className="bg-surface-variant text-on-surface hover:text-primary flex-1 rounded py-2 text-xs font-bold transition-colors"
+            >
+              EDIT TACTIC
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={onDelete}
+              className="flex-1 rounded bg-red-500/10 py-2 text-xs font-bold text-red-400 transition-colors hover:bg-red-500/20"
+            >
+              DELETE
+            </button>
+          )}
+        </div>
+      )}
     </>
   );
 }

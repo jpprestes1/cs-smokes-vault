@@ -7,24 +7,30 @@ interface TacticalPanelProps {
   marker: MarkerData | null;
   selectedVideo: VideoData | null;
   isAdding: boolean;
+  isEditing: boolean;
   mapId?: string;
   markers: MarkerData[];
   coords: { x: number; y: number };
   onClose: () => void;
   onSelectVideo: (video: VideoData | null) => void;
   onHoverVideo: (video: VideoData | null) => void;
+  onEdit: () => void;
+  onDelete: (id: string) => void;
 }
 
 export default function TacticalPanel({
   marker,
   selectedVideo,
   isAdding,
+  isEditing,
   mapId,
   markers,
   coords,
   onClose,
   onSelectVideo,
   onHoverVideo,
+  onEdit,
+  onDelete,
 }: TacticalPanelProps) {
   const isOpen = marker !== null || isAdding;
 
@@ -34,8 +40,14 @@ export default function TacticalPanel({
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
-      {isAdding ? (
-        <TacticForm mapId={mapId} markers={markers} coords={coords} onClose={onClose} />
+      {isAdding || isEditing ? (
+        <TacticForm
+          mapId={mapId}
+          markers={markers}
+          coords={coords}
+          onClose={onClose}
+          initialData={isEditing ? marker! : undefined}
+        />
       ) : marker ? (
         <>
           {/* Header compartilhado da exibição da Granada */}
@@ -76,6 +88,8 @@ export default function TacticalPanel({
                 marker={marker}
                 onSelectVideo={onSelectVideo}
                 onHoverVideo={onHoverVideo}
+                onEdit={onEdit}
+                onDelete={() => onDelete(marker.id)}
               />
             ) : (
               <TacticVideoPlayer video={selectedVideo} onBack={() => onSelectVideo(null)} />

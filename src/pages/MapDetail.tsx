@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { mapsDatabase } from '../features/maps/data/maps';
-
+import { doc, deleteDoc } from 'firebase/firestore';
 import MapSideNav from '../features/maps/components/MapSideNav';
 import RadarCanvas from '../features/tactics/components/RadarCanvas';
 import TacticalPanel from '../features/tactics/components/TacticalPanel';
@@ -19,6 +19,7 @@ import {
 } from '../features/tactics';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import ComboForm from '../features/tactics/components/ComboForm';
+import { db } from '../lib/firebase';
 
 export default function MapDetail() {
   const { mapId, view } = useParams(); // <-- Lendo a view da URL
@@ -52,6 +53,8 @@ export default function MapDetail() {
 
   const canCreate = role === 'ADMIN' || role === 'CREATOR';
 
+  const [isEditingTactic, setIsEditingTactic] = useState(false); // NOVO ESTADO DE EDICAO
+
   // Atualize os Handlers para limpar o hover
   const handleClosePanel = () => {
     setSelectedMarker(null);
@@ -59,6 +62,7 @@ export default function MapDetail() {
     setIsAddingTactic(false);
     setHoveredVideo(null);
     setSelectedCombo(null);
+    setIsEditingTactic(false);
   };
 
   const handleMarkerClick = (marker: MarkerData, e: React.MouseEvent) => {
@@ -67,6 +71,7 @@ export default function MapDetail() {
     setSelectedVideo(null);
     setIsAddingTactic(false);
     setHoveredVideo(null);
+    setIsEditingTactic(false);
   };
 
   const handleComboClick = (combo: ComboData, e: React.MouseEvent) => {
@@ -76,6 +81,7 @@ export default function MapDetail() {
     setSelectedVideo(null);
     setIsAddingTactic(false);
     setHoveredVideo(null);
+    setIsEditingTactic(false);
   };
 
   const handleSideChange = (side: string) => {
@@ -90,8 +96,22 @@ export default function MapDetail() {
     setHoveredVideo(null); // <-- Limpa o hover
   };
 
+  const handleDeleteMarker = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this tactic?')) {
+      await deleteDoc(doc(db, 'markers', id));
+      handleClosePanel();
+    }
+  };
+
+  const handleDeleteCombo = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this combo?')) {
+      await deleteDoc(doc(db, 'combos', id));
+      handleClosePanel();
+    }
+  };
+
   if (!view) {
-    return <Navigate to={`/maps/${mapId}/lineups`} replace />;
+    return <Navigate to={`/maps/${mapId}/grenades`} replace />;
   }
 
   return (
@@ -112,7 +132,7 @@ export default function MapDetail() {
         canCreate={canCreate}
       />
 
-      {view === 'lineups' ? (
+      {view === 'grenades' ? (
         <>
           <RadarCanvas
             mapId={mapId}
@@ -130,12 +150,15 @@ export default function MapDetail() {
             marker={selectedMarker}
             selectedVideo={selectedVideo}
             isAdding={isAddingTactic}
+            isEditing={isEditingTactic}
             mapId={mapId}
             markers={markers}
             coords={coords}
             onSelectVideo={setSelectedVideo}
             onHoverVideo={setHoveredVideo}
             onClose={handleClosePanel}
+            onEdit={() => setIsEditingTactic(true)}
+            onDelete={handleDeleteMarker}
           />
         </>
       ) : (
@@ -152,44 +175,26 @@ export default function MapDetail() {
             isPanelOpen={isAddingTactic || selectedCombo !== null}
           />
 
-          {(isAddingTactic || selectedCombo !== null) && (
+          {(isAddingTactic || selectedCombo !== null || isEditingTactic) && (
             <aside className="bg-surface-container/95 fixed top-16 right-0 z-40 flex h-[calc(100vh-64px)] w-full transform flex-col border-l border-white/10 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-transform duration-300 ease-out md:w-[450px]">
-              {isAddingTactic ? (
-                <ComboForm mapId={mapId} coords={coords} onClose={handleClosePanel} />
+              {isAddingTactic || isEditingTactic ? (
+                <ComboForm
+                  mapId={mapId}
+                  coords={coords}
+                  onClose={handleClosePanel}
+                  initialData={isEditingTactic ? selectedCombo! : undefined}
+                />
               ) : selectedCombo ? (
                 <>
-                  {/* Header do Combo */}
-                  <div className="flex shrink-0 items-start justify-between border-b border-white/10 px-6 py-5">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-on-surface-variant text-sm">
-                          strategy
-                        </span>
-                        <span className="font-data-label text-data-label text-on-surface-variant bg-surface-variant/50 scanline rounded-sm px-2 py-0.5 tracking-widest uppercase">
-                          EXECUTE
-                        </span>
-                        <span
-                          className={`font-data-label text-data-label ${selectedCombo.side === 'TERRORIST' ? 'text-primary border-primary/30 bg-primary/10' : 'text-secondary border-secondary/30 bg-secondary/10'} rounded-sm border px-2 py-0.5 tracking-widest uppercase`}
-                        >
-                          {selectedCombo.side}
-                        </span>
-                      </div>
-                      <h3 className="font-headline-md text-headline-md text-primary mt-1">
-                        {selectedCombo.title}
-                      </h3>
-                    </div>
-                    <button
-                      onClick={handleClosePanel}
-                      className="text-on-surface-variant hover:text-primary bg-surface-variant/30 rounded p-1 transition-colors active:scale-95"
-                    >
-                      <span className="material-symbols-outlined p-1">close</span>
-                    </button>
-                  </div>
-
-                  {/* Corpo do Painel: Detalhes ou Vídeo Player */}
+                  {/* Header do Execute ... */}
                   <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
                     {!selectedVideo ? (
-                      <ComboDetails combo={selectedCombo} onSelectVideo={setSelectedVideo} />
+                      <ComboDetails
+                        combo={selectedCombo}
+                        onSelectVideo={setSelectedVideo}
+                        onEdit={() => setIsEditingTactic(true)}
+                        onDelete={() => handleDeleteCombo(selectedCombo.id)}
+                      />
                     ) : (
                       <TacticVideoPlayer
                         video={selectedVideo}

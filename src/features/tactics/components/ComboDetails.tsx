@@ -1,8 +1,11 @@
 import { type ComboData, type VideoData } from '../types';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 interface ComboDetailsProps {
   combo: ComboData;
   onSelectVideo: (video: VideoData) => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 const platformConfig = {
@@ -12,20 +15,26 @@ const platformConfig = {
 };
 
 const getThumbnailUrl = (platform: string, embedUrl: string, fallbackThumb: string) => {
-  if (fallbackThumb && fallbackThumb.trim() !== '') {
-    return fallbackThumb;
-  }
+  if (fallbackThumb && fallbackThumb.trim() !== '') return fallbackThumb;
   if (platform === 'youtube') {
     const videoId = embedUrl.split('/embed/')[1]?.split('?')[0];
     if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   }
-  // Fallback genérico para combos (você pode colocar uma imagem específica de combo depois)
   return `/images/bg-smoke-video.png`;
 };
 
-export default function ComboDetails({ combo, onSelectVideo }: ComboDetailsProps) {
+export default function ComboDetails({
+  combo,
+  onSelectVideo,
+  onEdit,
+  onDelete,
+}: ComboDetailsProps) {
+  const { role } = useAuth();
+  const canEdit = role === 'ADMIN' || role === 'CREATOR';
+  const canDelete = role === 'ADMIN';
+
   return (
-    <>
+    <div className="flex h-full flex-col">
       <p className="font-body-base text-on-surface-variant text-sm">{combo.desc}</p>
 
       <div className="bg-primary/10 border-primary/20 text-primary mt-2 w-fit rounded border px-2 py-1">
@@ -34,7 +43,7 @@ export default function ComboDetails({ combo, onSelectVideo }: ComboDetailsProps
         </span>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex-1">
         <h4 className="font-data-label text-data-label text-on-surface-variant mb-4 border-b border-white/10 pb-2">
           EXECUTION GUIDES
         </h4>
@@ -43,7 +52,6 @@ export default function ComboDetails({ combo, onSelectVideo }: ComboDetailsProps
             const config =
               platformConfig[video.platform as keyof typeof platformConfig] ||
               platformConfig.youtube;
-
             return (
               <div
                 key={video.id}
@@ -58,14 +66,12 @@ export default function ComboDetails({ combo, onSelectVideo }: ComboDetailsProps
                     }}
                   ></div>
                   <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-transparent"></div>
-
                   <div
                     className={`absolute top-2 right-2 flex items-center gap-1 rounded px-2 py-1 ${config.color} text-[10px] font-bold tracking-wider text-white`}
                   >
                     <span className="material-symbols-outlined text-[12px]">{config.icon}</span>
                     {video.platform.toUpperCase()}
                   </div>
-
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 backdrop-blur-sm">
                       <span
@@ -92,6 +98,27 @@ export default function ComboDetails({ combo, onSelectVideo }: ComboDetailsProps
           })}
         </div>
       </div>
-    </>
+
+      {(canEdit || canDelete) && (
+        <div className="mt-auto flex gap-2 border-t border-white/10 pt-4">
+          {canEdit && (
+            <button
+              onClick={onEdit}
+              className="bg-surface-variant text-on-surface hover:text-primary flex-1 rounded py-2 text-xs font-bold transition-colors"
+            >
+              EDIT COMBO
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={onDelete}
+              className="flex-1 rounded bg-red-500/10 py-2 text-xs font-bold text-red-400 transition-colors hover:bg-red-500/20"
+            >
+              DELETE
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

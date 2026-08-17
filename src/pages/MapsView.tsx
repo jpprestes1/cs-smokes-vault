@@ -9,7 +9,7 @@ export default function MapsView() {
           Grenade Database
         </h1>
         <p className="font-body-base text-on-surface-variant">
-          Select a map to explore utility lineups, executes, and pro strategies.
+          Select a map to explore utility grenades, executes, and pro strategies.
         </p>
       </div>
 

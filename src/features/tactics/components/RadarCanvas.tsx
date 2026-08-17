@@ -97,11 +97,11 @@ export default function RadarCanvas({
             <button
               key={marker.id}
               onClick={(e) => onMarkerClick(marker, e)}
-              className={`bg-surface-container absolute -mt-5 -ml-5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
+              className={`bg-surface-container absolute -mt-5 -ml-5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
               style={{ top: formatCoord(marker.y), left: formatCoord(marker.x) }}
             >
               <span
-                className="material-symbols-outlined text-xl"
+                className="material-symbols-outlined !text-[18px]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 {marker.type === 'SMOKE'

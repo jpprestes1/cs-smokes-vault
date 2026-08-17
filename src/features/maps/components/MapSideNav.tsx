@@ -18,7 +18,7 @@ export default function MapSideNav({
   canCreate,
 }: MapSideNavProps) {
   const sides = ['All Sides', 'Terrorist', 'Counter-Terrorist'];
-  const { mapId, view = 'lineups' } = useParams(); // Pega a view atual da URL
+  const { mapId, view = 'grenades' } = useParams(); // Pega a view atual da URL
 
   return (
     <aside className="bg-surface-container-low/90 text-primary font-data-label text-data-label relative z-30 hidden w-64 flex-col border-r border-white/5 py-6 backdrop-blur-xl md:flex">
@@ -30,17 +30,17 @@ export default function MapSideNav({
           <span className="material-symbols-outlined text-sm">arrow_back</span> Back
         </button>
 
-        {/* TABS: Lineups vs Combos */}
+        {/* TABS: Grenades vs Combos */}
         <div className="bg-surface-container-highest mb-6 flex w-full rounded p-1">
           <Link
-            to={`/maps/${mapId}/lineups`}
+            to={`/maps/${mapId}/grenades`}
             className={`flex-1 rounded py-2 text-center transition-colors ${
-              view === 'lineups' || !view
+              view === 'grenades' || !view
                 ? 'bg-surface-variant text-primary font-bold shadow'
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            LINEUPS
+            GRENADES
           </Link>
           <Link
             to={`/maps/${mapId}/combos`}
