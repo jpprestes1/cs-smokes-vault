@@ -1,4 +1,4 @@
-import { type TacticFormData } from './TacticForm';
+import { type TacticFormData } from '../types';
 
 interface TacticFormVideoFieldsProps {
   formData: TacticFormData;

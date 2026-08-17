@@ -2,6 +2,10 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { Home, MapsView, MapDetail } from './pages';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import AdminRoute from './features/auth/components/AdminRoutes';
+import AdminDashboard from './pages/AdminDashboard';
 
 function ComingSoon() {
   return (
@@ -25,7 +29,17 @@ export default function App() {
           <Route path="/tactics" element={<ComingSoon />} />
           <Route path="/pro-strats" element={<ComingSoon />} />
           <Route path="/training" element={<ComingSoon />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="*" element={<ComingSoon />} />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
         </Routes>
       </main>
 

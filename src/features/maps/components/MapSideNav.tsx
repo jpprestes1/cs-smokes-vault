@@ -3,7 +3,8 @@ interface MapSideNavProps {
   activeSide: string;
   setActiveSide: (side: string) => void;
   onBack: () => void;
-  onAddTactic: () => void; // Nossa nova propriedade
+  onAddTactic: () => void;
+  canCreate: boolean;
 }
 
 export default function MapSideNav({
@@ -11,7 +12,8 @@ export default function MapSideNav({
   activeSide,
   setActiveSide,
   onBack,
-  onAddTactic, // Extraindo a propriedade aqui
+  onAddTactic,
+  canCreate,
 }: MapSideNavProps) {
   const sides = ['All Sides', 'Terrorist', 'Counter-Terrorist'];
 
@@ -63,17 +65,17 @@ export default function MapSideNav({
         ))}
       </div>
 
-      {/* NOVO BOTÃO DE ADD TACTIC AQUI */}
-      {/* A classe 'mt-auto' empurra este bloco lá pro final (rodapé) do menu lateral */}
-      <div className="mt-auto border-t border-white/5 px-6 pt-6">
-        <button
-          onClick={onAddTactic}
-          className="bg-primary-container text-on-primary-container font-headline-md hover:bg-primary flex w-full items-center justify-center gap-2 rounded-sm py-3 text-sm tracking-wide uppercase transition-all active:scale-95"
-        >
-          <span className="material-symbols-outlined text-lg">add_circle</span>
-          Add Tactic
-        </button>
-      </div>
+      {canCreate && (
+        <div className="mt-auto border-t border-white/5 px-6 pt-6">
+          <button
+            onClick={onAddTactic}
+            className="bg-primary-container text-on-primary-container font-headline-md hover:bg-primary flex w-full items-center justify-center gap-2 rounded-sm py-3 text-sm tracking-wide uppercase transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-lg">add_circle</span>
+            Add Tactic
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

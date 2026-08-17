@@ -4,9 +4,15 @@ interface MobileMenuProps {
   activeSide: string;
   setActiveSide: (side: string) => void;
   onAddTactic: () => void;
+  canCreate: boolean;
 }
 
-export default function MobileMenu({ activeSide, setActiveSide, onAddTactic }: MobileMenuProps) {
+export default function MobileMenu({
+  activeSide,
+  setActiveSide,
+  onAddTactic,
+  canCreate,
+}: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const sides = ['Terrorist', 'Counter-Terrorist', 'All Sides'];
 
@@ -29,15 +35,17 @@ export default function MobileMenu({ activeSide, setActiveSide, onAddTactic }: M
             </button>
           ))}
           <div className="my-1 border-t border-white/10"></div>
-          <button
-            onClick={() => {
-              onAddTactic();
-              setIsOpen(false);
-            }}
-            className="text-primary flex items-center gap-2 px-4 py-2 text-left text-sm font-bold"
-          >
-            <span className="material-symbols-outlined text-sm">add_circle</span> ADD TACTIC
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => {
+                onAddTactic();
+                setIsOpen(false);
+              }}
+              className="text-primary flex items-center gap-2 px-4 py-2 text-left text-sm font-bold"
+            >
+              <span className="material-symbols-outlined text-sm">add_circle</span> ADD TACTIC
+            </button>
+          )}
         </div>
       )}
 

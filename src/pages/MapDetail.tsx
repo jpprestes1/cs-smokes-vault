@@ -8,6 +8,7 @@ import TacticalPanel from '../features/tactics/components/TacticalPanel';
 import MobileMenu from '../components/MobileMenu';
 
 import { useMarkers, type MarkerData, type VideoData } from '../features/tactics';
+import { useAuth } from '../features/auth/hooks/useAuth';
 
 export default function MapDetail() {
   const { mapId } = useParams();
@@ -35,6 +36,10 @@ export default function MapDetail() {
   });
   const [hoveredVideo, setHoveredVideo] = useState<VideoData | null>(null);
   const isPanelOpen = selectedMarker !== null || isAddingTactic;
+
+  const { role } = useAuth();
+
+  const canCreate = role === 'ADMIN' || role === 'CREATOR';
 
   // Atualize os Handlers para limpar o hover
   const handleClosePanel = () => {
@@ -70,13 +75,15 @@ export default function MapDetail() {
         activeSide={activeSide}
         setActiveSide={handleSideChange}
         onBack={() => navigate(-1)}
-        onAddTactic={handleAddTacticClick} // NOVA PROP PASSADA PARA O MENU
+        onAddTactic={handleAddTacticClick}
+        canCreate={canCreate}
       />
 
       <MobileMenu
         activeSide={activeSide}
         setActiveSide={handleSideChange}
         onAddTactic={handleAddTacticClick}
+        canCreate={canCreate}
       />
 
       <RadarCanvas

@@ -1,16 +1,35 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../lib/firebase';
+import { useAuth } from '../features/auth/hooks/useAuth';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-
+  const { user, loading, role } = useAuth(); // Importa o estado do usuário
+  console.log(role);
   const navItems = [
     { name: 'Maps', path: '/maps' },
     { name: 'Tactics', path: '/tactics' },
     { name: 'Pro Strats', path: '/pro-strats' },
     { name: 'Training', path: '/training' },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
+  // Gera um avatar temporário único baseado no email caso o usuário não tenha foto
+  const getAvatarUrl = () => {
+    if (user?.photoURL) return user.photoURL;
+    const seed = user?.email || 'agent';
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=f6ae2d`;
+  };
 
   return (
     <nav className="bg-surface-container/80 fixed top-0 z-50 w-full border-b border-white/10 shadow-[0_0_20px_rgba(246,174,45,0.1)] backdrop-blur-md">
@@ -50,30 +69,78 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Botões da direita (Upload removido daqui) */}
-        {/* <div className="flex items-center gap-3 md:gap-4">
-          <div className="border-outline-variant hover:border-primary h-8 w-8 cursor-pointer overflow-hidden rounded-full border transition-colors">
-            <img
-              alt="User Profile Avatar"
-              className="h-full w-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuByk1i2N8K3KHHoJIJvFLMGVucxZU2JGfmowFN4jGl8b3M1QxVd3U0q-yEXS5iOJqsPPRIeg1KdLUCPmMnsIENyotOFIhQN8KcMHDb3yBqUJsEHPhC8UokDJJ-1M-30Q77hpG8VSmmVrlCaPbG8JVVdAaf7QRjZpSpOOx0DnAMXx02Q8fVTGbMyz0qNb9XZQpGEcW7nhfPPnVOeiC2bj4rYp1R6cqV1oyGzti60bWCIAoi9_JeQIVpx"
-            />
-          </div>
+        {/* Área da Direita: Autenticação & Menu Hamburger */}
+        <div className="flex items-center gap-4 md:gap-6">
+          {!loading && (
+            <div className="hidden items-center gap-4 md:flex">
+              {user ? (
+                <div className="flex items-center gap-4">
+                  {role === 'ADMIN' && (
+                    <Link
+                      to="/admin"
+                      className="text-on-surface-variant hover:text-primary transition-colors"
+                      title="Admin Dashboard"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">settings</span>
+                    </Link>
+                  )}
+
+                  <button
+                    onClick={handleLogout}
+                    className="text-on-surface-variant hover:text-error font-data-label text-xs font-bold transition-colors"
+                  >
+                    LOGOUT
+                  </button>
+                  <div
+                    className="border-primary h-9 w-9 cursor-pointer overflow-hidden rounded-full border-2 transition-all hover:shadow-[0_0_10px_rgba(246,174,45,0.4)]"
+                    title={user.email || 'Profile'}
+                  >
+                    <img
+                      alt="User Avatar"
+                      className="h-full w-full object-cover"
+                      src={getAvatarUrl()}
+                    />
+                  </div>
+                </div>
+              ) : (
+                // Usuário Deslogado (Desktop)
+                <div className="flex items-center gap-3">
+                  <Link
+                    to="/login"
+                    className="text-on-surface hover:text-primary font-data-label text-xs font-bold transition-colors"
+                  >
+                    LOGIN
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-primary text-on-primary font-data-label rounded px-4 py-2 text-xs font-bold transition-transform active:scale-95"
+                  >
+                    REGISTER
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Botão Menu Mobile */}
           <button
             className="text-primary-container flex items-center md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             <span className="material-symbols-outlined">{isMenuOpen ? 'close' : 'menu'}</span>
           </button>
-        </div> */}
+        </div>
       </div>
 
       {/* Menu Mobile */}
       <div
         className={`bg-surface-container-highest flex flex-col overflow-hidden border-b border-white/10 shadow-xl transition-all duration-300 ease-in-out md:hidden ${
-          isMenuOpen ? 'max-h-64 px-4 py-2 opacity-100' : 'pointer-events-none max-h-0 opacity-0'
+          isMenuOpen
+            ? 'max-h-[400px] px-4 py-2 opacity-100'
+            : 'pointer-events-none max-h-0 opacity-0'
         }`}
       >
+        {/* Links Principais Mobile */}
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -81,7 +148,7 @@ export default function Navbar() {
               key={item.name}
               to={item.path}
               onClick={() => setIsMenuOpen(false)}
-              className={`flex items-center gap-2 border-b border-white/5 py-2 transition-all duration-300 ${
+              className={`flex items-center gap-2 border-b border-white/5 py-3 transition-all duration-300 ${
                 isActive
                   ? 'text-primary translate-x-2 font-bold'
                   : 'text-on-surface-variant hover:text-primary font-medium hover:translate-x-1'
@@ -94,6 +161,48 @@ export default function Navbar() {
             </Link>
           );
         })}
+
+        {/* Área de Autenticação Mobile */}
+        {!loading && (
+          <div className="mt-2 flex flex-col gap-2 pt-2 pb-4">
+            {user ? (
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleLogout}
+                  className="text-on-surface-variant hover:text-error font-data-label text-xs font-bold transition-colors"
+                >
+                  LOGOUT
+                </button>
+                {role === 'ADMIN' && (
+                  <Link
+                    to="/admin"
+                    className="text-on-surface-variant hover:text-primary transition-colors"
+                    title="Admin Dashboard"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">settings</span>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="bg-surface-variant/50 text-on-surface font-data-label rounded py-2 text-center text-xs font-bold"
+                >
+                  LOGIN
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="bg-primary text-on-primary font-data-label rounded py-2 text-center text-xs font-bold"
+                >
+                  REGISTER
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );
