@@ -93,16 +93,6 @@ export default function MapDetail() {
     setIsEditingTactic(false);
   };
 
-  const handleComboClick = (combo: ComboData, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedCombo(combo);
-    setSelectedMarker(null);
-    setSelectedVideo(null);
-    setIsAddingTactic(false);
-    setHoveredVideo(null);
-    setIsEditingTactic(false);
-  };
-
   const handleSideChange = (side: string) => {
     setActiveSide(side);
     handleClosePanel();
