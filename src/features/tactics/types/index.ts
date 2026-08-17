@@ -38,3 +38,21 @@ export interface TacticFormData {
   author: string;
   difficulty?: string;
 }
+
+export interface ComboTarget {
+  type: 'SMOKE' | 'FLASH' | 'MOLOTOV';
+  endX: number;
+  endY: number;
+}
+
+export interface ComboData {
+  id: string;
+  mapId: string;
+  title: string;
+  side: string;
+  startX: number; // Posição de onde o jogador vai lançar
+  startY: number;
+  targets: ComboTarget[]; // Lista de granadas que compõem o combo
+  desc: string;
+  videos: VideoData[];
+}
