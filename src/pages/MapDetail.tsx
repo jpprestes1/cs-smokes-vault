@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { mapsDatabase } from '../features/maps/data/maps';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
 import MapSideNav from '../features/maps/components/MapSideNav';
 import RadarCanvas from '../features/tactics/components/RadarCanvas';
 import TacticalPanel from '../features/tactics/components/TacticalPanel';
@@ -10,56 +10,44 @@ import MobileMenu from '../components/MobileMenu';
 import ComboDetails from '../features/tactics/components/ComboDetails';
 import TacticVideoPlayer from '../features/tactics/components/TacticVideoPlayer';
 import ComboList from '../features/tactics/components/ComboList';
-
-import {
-  useCombos,
-  useMarkers,
-  type ComboData,
-  type MarkerData,
-  type VideoData,
-} from '../features/tactics';
+import { type ComboData, type MarkerData, type VideoData } from '../features/tactics/types';
+import { useMapData } from '../features/tactics/hooks/useMapData';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import ComboForm from '../features/tactics/components/ComboForm';
 import { db } from '../lib/firebase';
 
 export default function MapDetail() {
-  const { mapId, view } = useParams(); // <-- Lendo a view da URL
+  const { mapId, view } = useParams();
   const navigate = useNavigate();
-  // 2. Chame o Hook
-  const { markers } = useMarkers(mapId);
-  const { combos } = useCombos(mapId);
 
-  // Estados Globais
-  const [activeSide, setActiveSide] = useState('All Sides'); // <-- Novo estado para controlar o filtro de lado
+  // UTILIZANDO O NOVO HOOK GENÉRICO AQUI
+  const { data: markers } = useMapData<MarkerData>('markers', mapId);
+  const { data: combos } = useMapData<ComboData>('combos', mapId);
+
+  const [activeSide, setActiveSide] = useState('All Sides');
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [selectedCombo, setSelectedCombo] = useState<ComboData | null>(null);
 
-  // NOVO ESTADO: Controla se o formulário está aberto
   const [isAddingTactic, setIsAddingTactic] = useState(false);
-
-  // 1. Busca os dados do mapa atual
   const currentMap = mapsDatabase.find((m) => m.id === mapId);
 
-  // 3. O NOVO FILTRO: Separa por lado (Terrorist, Counter-Terrorist ou All Sides)
   const visibleMarkers = markers.filter((marker) => {
     if (activeSide === 'All Sides') return true;
     return marker.side === activeSide.toUpperCase();
   });
+
   const [hoveredVideo, setHoveredVideo] = useState<VideoData | null>(null);
   const isPanelOpen = selectedMarker !== null || isAddingTactic;
 
   const { role } = useAuth();
-
   const canCreate = role === 'ADMIN' || role === 'CREATOR';
 
-  const [isEditingTactic, setIsEditingTactic] = useState(false); // NOVO ESTADO DE EDICAO
-
+  const [isEditingTactic, setIsEditingTactic] = useState(false);
   const [selectedComboPos, setSelectedComboPos] = useState<{ x: number; y: number } | null>(null);
   const [hoveredCombo, setHoveredCombo] = useState<ComboData | null>(null);
 
-  // Filtra os combos que pertencem à posição clicada
   const combosAtPosition = selectedComboPos
     ? combos.filter((c) => c.startX === selectedComboPos.x && c.startY === selectedComboPos.y)
     : [];
@@ -67,8 +55,8 @@ export default function MapDetail() {
   const handleClosePanel = () => {
     setSelectedMarker(null);
     setSelectedCombo(null);
-    setSelectedComboPos(null); // <-- Novo
-    setHoveredCombo(null); // <-- Novo
+    setSelectedComboPos(null);
+    setHoveredCombo(null);
     setSelectedVideo(null);
     setIsAddingTactic(false);
     setIsEditingTactic(false);
@@ -102,21 +90,46 @@ export default function MapDetail() {
     setSelectedMarker(null);
     setSelectedVideo(null);
     setIsAddingTactic(true);
-    setHoveredVideo(null); // <-- Limpa o hover
+    setHoveredVideo(null);
   };
 
-  const handleDeleteMarker = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this tactic?')) {
-      await deleteDoc(doc(db, 'markers', id));
+  const handleDeleteItem = async (collectionName: string, id: string) => {
+    if (
+      window.confirm(
+        `Are you sure you want to delete this ${collectionName === 'markers' ? 'tactic' : 'combo'}?`
+      )
+    ) {
+      await deleteDoc(doc(db, collectionName, id));
       handleClosePanel();
     }
   };
 
-  const handleDeleteCombo = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this combo?')) {
-      await deleteDoc(doc(db, 'combos', id));
-      handleClosePanel();
+  const handleDeleteVideo = async (
+    collectionName: 'markers' | 'combos',
+    parentId: string,
+    videoId: string
+  ) => {
+    if (window.confirm('Are you sure you want to delete this video?')) {
+      try {
+        const docRef = doc(db, collectionName, parentId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const updatedVideos = data.videos.filter((v: VideoData) => v.id !== videoId);
+          await updateDoc(docRef, { videos: updatedVideos });
+        }
+      } catch (error) {
+        console.error('Error deleting video:', error);
+      }
     }
+  };
+
+  const handleEditVideo = (
+    collectionName: 'markers' | 'combos',
+    parentId: string,
+    video: VideoData
+  ) => {
+    alert(`Editar vídeo "${video.title}" na coleção ${collectionName}/${parentId}`);
   };
 
   if (!view) {
@@ -133,7 +146,6 @@ export default function MapDetail() {
         onAddTactic={handleAddTacticClick}
         canCreate={canCreate}
       />
-
       <MobileMenu
         activeSide={activeSide}
         setActiveSide={handleSideChange}
@@ -167,7 +179,9 @@ export default function MapDetail() {
             onHoverVideo={setHoveredVideo}
             onClose={handleClosePanel}
             onEdit={() => setIsEditingTactic(true)}
-            onDelete={handleDeleteMarker}
+            onDelete={() => handleDeleteItem('markers', selectedMarker!.id)}
+            onDeleteVideo={(videoId) => handleDeleteVideo('markers', selectedMarker!.id, videoId)}
+            onEditVideo={(video) => handleEditVideo('markers', selectedMarker!.id, video)}
           />
         </>
       ) : (
@@ -180,11 +194,10 @@ export default function MapDetail() {
             activeCombo={hoveredCombo || selectedCombo}
             coords={coords}
             setCoords={setCoords}
-            onPositionClick={handlePositionClick} /* <--- ELA DEVE SER PASSADA AQUI */
+            onPositionClick={handlePositionClick}
             onMapClick={handleClosePanel}
             isPanelOpen={isAddingTactic || selectedComboPos !== null}
           />
-
           {(isAddingTactic || selectedComboPos !== null || isEditingTactic) && (
             <aside className="bg-surface-container/95 fixed top-16 right-0 z-40 flex h-[calc(100vh-64px)] w-full transform flex-col border-l border-white/10 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-transform duration-300 ease-out md:w-[450px]">
               {isAddingTactic || isEditingTactic ? (
@@ -197,7 +210,6 @@ export default function MapDetail() {
               ) : selectedCombo ? (
                 <div className="flex h-full flex-col">
                   <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-5">
-                    {/* Se houver mais de um combo na lista, mostra o botão de voltar. Senão, mostra apenas o texto EXECUTE */}
                     {combosAtPosition.length > 1 ? (
                       <button
                         onClick={() => {
@@ -247,7 +259,11 @@ export default function MapDetail() {
                         combo={selectedCombo}
                         onSelectVideo={setSelectedVideo}
                         onEdit={() => setIsEditingTactic(true)}
-                        onDelete={() => handleDeleteCombo(selectedCombo.id)}
+                        onDelete={() => handleDeleteItem('combos', selectedCombo.id)}
+                        onDeleteVideo={(videoId) =>
+                          handleDeleteVideo('combos', selectedCombo.id, videoId)
+                        }
+                        onEditVideo={(video) => handleEditVideo('combos', selectedCombo.id, video)}
                       />
                     ) : (
                       <TacticVideoPlayer

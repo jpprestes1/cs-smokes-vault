@@ -16,6 +16,8 @@ interface TacticalPanelProps {
   onHoverVideo: (video: VideoData | null) => void;
   onEdit: () => void;
   onDelete: (id: string) => void;
+  onDeleteVideo: (videoId: string) => void;
+  onEditVideo: (video: VideoData) => void;
 }
 
 export default function TacticalPanel({
@@ -31,6 +33,8 @@ export default function TacticalPanel({
   onHoverVideo,
   onEdit,
   onDelete,
+  onDeleteVideo,
+  onEditVideo,
 }: TacticalPanelProps) {
   const isOpen = marker !== null || isAdding;
 
@@ -50,7 +54,6 @@ export default function TacticalPanel({
         />
       ) : marker ? (
         <>
-          {/* Header compartilhado da exibição da Granada */}
           <div className="flex shrink-0 items-start justify-between border-b border-white/10 px-6 py-5">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -90,6 +93,8 @@ export default function TacticalPanel({
                 onHoverVideo={onHoverVideo}
                 onEdit={onEdit}
                 onDelete={() => onDelete(marker.id)}
+                onDeleteVideo={onDeleteVideo}
+                onEditVideo={onEditVideo}
               />
             ) : (
               <TacticVideoPlayer video={selectedVideo} onBack={() => onSelectVideo(null)} />

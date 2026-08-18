@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMapMarkerCount } from '../../tactics/hooks/useMarkers';
+import { useMapItemCount } from '../../tactics/hooks/useMapData';
 
 interface MapCardProps {
   name: string;
@@ -9,7 +9,8 @@ interface MapCardProps {
 export default function MapCard({ name, image }: MapCardProps) {
   const mapSlug = name.toLowerCase().replace(/\s+/g, '-');
 
-  const realCount = useMapMarkerCount(mapSlug);
+  // Utilizando o hook genérico apontado para a coleção de markers
+  const realCount = useMapItemCount('markers', mapSlug);
 
   return (
     <Link
