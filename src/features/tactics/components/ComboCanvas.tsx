@@ -1,5 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { type ComboData } from '../types';
+import { usePanZoom } from '../../../hooks/usePanZoom';
+import TacticalMarker from './TacticalMarker';
 
 interface ComboCanvasProps {
   mapId?: string;
@@ -26,63 +29,18 @@ export default function ComboCanvas({
   onMapClick,
   isPanelOpen,
 }: ComboCanvasProps) {
-  const [zoom, setZoom] = useState(1);
-
-  // Estados para o Drag-to-Pan (Arrastar o mapa)
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [scrollPos, setScrollPos] = useState({ left: 0, top: 0 });
-
-  const handleZoomIn = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom((prev) => Math.min(prev + 0.25, 1.5));
-  };
-
-  const handleZoomOut = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom((prev) => Math.max(prev - 0.25, 1));
-  };
-
-  // Funções de Drag-to-Pan
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollRef.current) return;
-    setIsDragging(true);
-    setDragStart({
-      x: e.pageX - scrollRef.current.offsetLeft,
-      y: e.pageY - scrollRef.current.offsetTop,
-    });
-    setScrollPos({
-      left: scrollRef.current.scrollLeft,
-      top: scrollRef.current.scrollTop,
-    });
-  };
-
-  const handleMouseUpOrLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleContainerMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const y = e.pageY - scrollRef.current.offsetTop;
-    const walkX = x - dragStart.x;
-    const walkY = y - dragStart.y;
-    scrollRef.current.scrollLeft = scrollPos.left - walkX;
-    scrollRef.current.scrollTop = scrollPos.top - walkY;
-  };
-
-  // Captura de coordenadas
-  const handleInnerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const xPercent = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-    const yPercent = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-    setCoords({
-      x: Math.max(0, Math.min(100, xPercent)),
-      y: Math.max(0, Math.min(100, yPercent)),
-    });
-  };
+  const { t } = useTranslation();
+  const {
+    zoom,
+    scrollRef,
+    isDragging,
+    handleZoomIn,
+    handleZoomOut,
+    handleMouseDown,
+    handleMouseUpOrLeave,
+    handleContainerMouseMove,
+    handleInnerMouseMove,
+  } = usePanZoom(setCoords);
 
   const uniquePositions = Array.from(new Set(combos.map((c) => `${c.startX},${c.startY}`))).map(
     (key) => {
@@ -102,10 +60,10 @@ export default function ComboCanvas({
 
       <div className="pointer-events-none absolute top-6 left-6 z-20 flex flex-col gap-2">
         <div className="bg-surface-container/90 text-primary font-data-label text-data-label rounded-sm border border-white/10 px-3 py-1 uppercase backdrop-blur">
-          EXECUTES // {mapId?.toUpperCase()}
+          {t('tactics.executesLabel')} // {mapId?.toUpperCase()}
         </div>
         <div className="font-data-label text-on-surface-variant text-xs">
-          COORD:{' '}
+          {t('tactics.coordLabel')}:{' '}
           <span className="font-mono">
             X:{String(coords.x).padStart(2, '0')} Y:{String(coords.y).padStart(2, '0')}
           </span>
@@ -131,6 +89,7 @@ export default function ComboCanvas({
               style={{ backgroundImage: `url('${radarImage}')` }}
             ></div>
 
+            {/* Linhas animadas dos Combos */}
             {activeCombo && (
               <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
                 {activeCombo.targets.map((target, idx) => (
@@ -140,7 +99,11 @@ export default function ComboCanvas({
                     y1={`${activeCombo.startY}%`}
                     x2={`${target.endX}%`}
                     y2={`${target.endY}%`}
-                    stroke="rgba(246,174,45,0.6)"
+                    stroke={
+                      activeCombo.side === 'COUNTER-TERRORIST'
+                        ? 'rgba(164,201,255,0.6)'
+                        : 'rgba(246,174,45,0.6)'
+                    }
                     strokeWidth="2"
                     strokeDasharray="6 4"
                     className="animate-dash-flow"
@@ -149,48 +112,40 @@ export default function ComboCanvas({
               </svg>
             )}
 
+            {/* Posições iniciais dos Combos */}
             {uniquePositions.map((pos, idx) => {
               const isSelected = selectedPos?.x === pos.startX && selectedPos?.y === pos.startY;
               if (selectedPos && !isSelected) return null;
 
+              // Como as posições agrupam vários combos, utilizamos a cor base da UI (ou side se precisares)
               return (
-                <button
-                  key={idx}
+                <TacticalMarker
+                  key={`start-${idx}`}
+                  x={pos.startX}
+                  y={pos.startY}
+                  type="COMBO"
+                  isSelected={isSelected}
                   onClick={(e) => onPositionClick({ x: pos.startX, y: pos.startY }, e)}
-                  className={`bg-surface-container absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded border-2 transition-all duration-300 ${
-                    isSelected
-                      ? 'border-primary text-primary z-30 scale-110 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)]'
-                      : 'border-primary/60 text-primary/80 hover:border-primary hover:text-primary z-20 shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:scale-110'
-                  }`}
-                  style={{ top: `${pos.startY}%`, left: `${pos.startX}%` }}
-                >
-                  <span className="material-symbols-outlined text-[18px]">strategy</span>
-                </button>
+                />
               );
             })}
 
+            {/* Alvos finais dos Combos */}
             {activeCombo &&
               activeCombo.targets.map((target, idx) => (
-                <div
+                <TacticalMarker
                   key={`target-${idx}`}
-                  className="bg-surface-container border-primary/50 text-primary absolute z-20 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border shadow-[0_0_10px_rgba(246,174,45,0.4)]"
-                  style={{ top: `${target.endY}%`, left: `${target.endX}%` }}
-                >
-                  <span
-                    className="material-symbols-outlined text-[14px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    {target.type === 'SMOKE'
-                      ? 'cloud'
-                      : target.type === 'FLASH'
-                        ? 'flare'
-                        : 'local_fire_department'}
-                  </span>
-                </div>
+                  x={target.endX}
+                  y={target.endY}
+                  type={target.type}
+                  side={activeCombo.side} // Agora a cor do alvo adapta-se à equipa do Combo!
+                  variant="target"
+                />
               ))}
           </div>
         </div>
 
+        {/* ... botões de zoom iguais ... */}
         <div className="absolute right-4 bottom-4 z-40 flex flex-col gap-2">
           <button
             onClick={handleZoomIn}

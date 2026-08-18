@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface MapSideNavProps {
   mapName?: string;
@@ -17,8 +18,15 @@ export default function MapSideNav({
   onAddTactic,
   canCreate,
 }: MapSideNavProps) {
+  const { t } = useTranslation();
   const sides = ['All Sides', 'Terrorist', 'Counter-Terrorist'];
   const { mapId, view = 'grenades' } = useParams(); // Pega a view atual da URL
+
+  const sideLabel = (side: string) => {
+    if (side === 'Terrorist') return t('maps.sideT');
+    if (side === 'Counter-Terrorist') return t('maps.sideCt');
+    return t('maps.sideAll');
+  };
 
   return (
     <aside className="bg-surface-container-low/90 text-primary font-data-label text-data-label relative z-30 hidden w-64 flex-col border-r border-white/5 py-6 backdrop-blur-xl md:flex">
@@ -27,7 +35,7 @@ export default function MapSideNav({
           onClick={onBack}
           className="text-on-surface-variant hover:text-primary mb-4 flex w-fit items-center gap-1 transition-colors"
         >
-          <span className="material-symbols-outlined text-sm">arrow_back</span> Back
+          <span className="material-symbols-outlined text-sm">arrow_back</span> {t('maps.back')}
         </button>
 
         {/* TABS: Grenades vs Combos */}
@@ -40,7 +48,7 @@ export default function MapSideNav({
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            GRENADES
+            {t('maps.grenades')}
           </Link>
           <Link
             to={`/maps/${mapId}/combos`}
@@ -50,7 +58,7 @@ export default function MapSideNav({
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            COMBOS
+            {t('maps.combos')}
           </Link>
         </div>
 
@@ -63,10 +71,10 @@ export default function MapSideNav({
           </span>
         </div>
         <h2 className="font-headline-md-mobile text-headline-md-mobile text-primary font-bold uppercase">
-          STRAT FILTER
+          {t('maps.stratFilter')}
         </h2>
         <span className="text-on-surface-variant text-opacity-70 capitalize">
-          {mapName} {view === 'combos' ? 'Executes' : 'Utility'}
+          {mapName} {view === 'combos' ? t('maps.executes') : t('maps.utility')}
         </span>
       </div>
 
@@ -88,7 +96,7 @@ export default function MapSideNav({
                   ? 'shield'
                   : 'groups'}
             </span>
-            {side}
+            {sideLabel(side)}
           </button>
         ))}
       </div>
@@ -100,7 +108,7 @@ export default function MapSideNav({
             className="bg-primary-container text-on-primary-container font-headline-md hover:bg-primary flex w-full items-center justify-center gap-2 rounded-sm py-3 text-sm tracking-wide uppercase transition-all active:scale-95"
           >
             <span className="material-symbols-outlined text-lg">add_circle</span>
-            Add Tactic
+            {t('maps.addTactic')}
           </button>
         </div>
       )}

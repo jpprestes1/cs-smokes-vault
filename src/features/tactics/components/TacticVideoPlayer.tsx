@@ -1,4 +1,5 @@
 import { type VideoData } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface TacticVideoPlayerProps {
   video: VideoData;
@@ -12,6 +13,7 @@ const platformConfig = {
 };
 
 export default function TacticVideoPlayer({ video, onBack }: TacticVideoPlayerProps) {
+  const { t } = useTranslation();
   const config =
     platformConfig[video.platform as keyof typeof platformConfig] || platformConfig.youtube;
 
@@ -21,7 +23,7 @@ export default function TacticVideoPlayer({ video, onBack }: TacticVideoPlayerPr
         onClick={onBack}
         className="text-on-surface-variant hover:text-primary font-data-label mb-4 flex w-fit items-center gap-2 text-xs uppercase transition-colors"
       >
-        <span className="material-symbols-outlined text-sm">arrow_back</span> Back to List
+        <span className="material-symbols-outlined text-sm">arrow_back</span> {t('maps.backToList')}
       </button>
 
       {/* Container Padronizado para Shorts, TikTok e Reels */}

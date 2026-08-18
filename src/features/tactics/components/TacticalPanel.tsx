@@ -1,4 +1,5 @@
 import { type MarkerData, type VideoData } from '../types';
+import { useTranslation } from 'react-i18next';
 import TacticForm from './TacticForm';
 import TacticDetails from './TacticDetails';
 import TacticVideoPlayer from './TacticVideoPlayer';
@@ -16,6 +17,8 @@ interface TacticalPanelProps {
   onHoverVideo: (video: VideoData | null) => void;
   onEdit: () => void;
   onDelete: (id: string) => void;
+  onDeleteVideo: (videoId: string) => void;
+  onEditVideo: (video: VideoData) => void;
 }
 
 export default function TacticalPanel({
@@ -31,8 +34,24 @@ export default function TacticalPanel({
   onHoverVideo,
   onEdit,
   onDelete,
+  onDeleteVideo,
+  onEditVideo,
 }: TacticalPanelProps) {
+  const { t } = useTranslation();
   const isOpen = marker !== null || isAdding;
+
+  const typeLabel = (type: string) => {
+    if (type === 'SMOKE') return t('common.smoke');
+    if (type === 'FLASH') return t('common.flash');
+    if (type === 'MOLOTOV') return t('common.molotov');
+    return type;
+  };
+
+  const sideLabel = (side: string) => {
+    if (side === 'TERRORIST') return t('maps.sideT');
+    if (side === 'COUNTER-TERRORIST') return t('maps.sideCt');
+    return side;
+  };
 
   return (
     <aside
@@ -50,7 +69,6 @@ export default function TacticalPanel({
         />
       ) : marker ? (
         <>
-          {/* Header compartilhado da exibição da Granada */}
           <div className="flex shrink-0 items-start justify-between border-b border-white/10 px-6 py-5">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -62,12 +80,12 @@ export default function TacticalPanel({
                       : 'local_fire_department'}
                 </span>
                 <span className="font-data-label text-data-label text-on-surface-variant bg-surface-variant/50 scanline rounded-sm px-2 py-0.5 tracking-widest uppercase">
-                  {marker.type}
+                  {typeLabel(marker.type)}
                 </span>
                 <span
                   className={`font-data-label text-data-label ${marker.side === 'TERRORIST' ? 'text-primary border-primary/30 bg-primary/10' : 'text-secondary border-secondary/30 bg-secondary/10'} rounded-sm border px-2 py-0.5 tracking-widest uppercase`}
                 >
-                  {marker.side}
+                  {sideLabel(marker.side)}
                 </span>
               </div>
               <h3 className="font-headline-md text-headline-md text-primary mt-1">
@@ -90,6 +108,8 @@ export default function TacticalPanel({
                 onHoverVideo={onHoverVideo}
                 onEdit={onEdit}
                 onDelete={() => onDelete(marker.id)}
+                onDeleteVideo={onDeleteVideo}
+                onEditVideo={onEditVideo}
               />
             ) : (
               <TacticVideoPlayer video={selectedVideo} onBack={() => onSelectVideo(null)} />

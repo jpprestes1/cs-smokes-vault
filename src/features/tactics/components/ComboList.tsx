@@ -1,4 +1,5 @@
 import { type ComboData } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface ComboListProps {
   combos: ComboData[];
@@ -13,11 +14,20 @@ export default function ComboList({
   onHoverCombo,
   onClose,
 }: ComboListProps) {
+  const { t } = useTranslation();
+
+  const sideLabel = (side: string) => {
+    if (side === 'TERRORIST') return t('maps.sideT');
+    if (side === 'COUNTER-TERRORIST') return t('maps.sideCt');
+    return side;
+  };
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-5">
         <h3 className="font-headline-md text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined">format_list_bulleted</span> SELECT COMBO
+          <span className="material-symbols-outlined">format_list_bulleted</span>{' '}
+          {t('tactics.selectCombo')}
         </h3>
         <button
           onClick={onClose}
@@ -29,7 +39,7 @@ export default function ComboList({
 
       <div className="flex flex-col gap-3 overflow-y-auto p-6">
         <p className="font-body-base text-on-surface-variant mb-4 text-sm">
-          Multiple executions available from this position. Hover to preview targets.
+          {t('tactics.multipleExecutionsHint')}
         </p>
 
         {combos.map((combo) => (
@@ -44,10 +54,10 @@ export default function ComboList({
               <span
                 className={`font-data-label text-[10px] ${combo.side === 'TERRORIST' ? 'text-primary bg-primary/10' : 'text-secondary bg-secondary/10'} rounded border border-current px-2 py-0.5`}
               >
-                {combo.side}
+                {sideLabel(combo.side)}
               </span>
               <span className="font-data-label text-on-surface-variant text-xs">
-                {combo.targets.length} GRENADES
+                {t('tactics.grenadesCountLabel', { count: combo.targets.length })}
               </span>
             </div>
             <span className="font-headline-md text-on-surface text-lg">{combo.title}</span>

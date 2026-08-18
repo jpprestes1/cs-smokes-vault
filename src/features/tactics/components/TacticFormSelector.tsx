@@ -1,5 +1,6 @@
 import { type MarkerData } from '../types';
 import { type TacticFormData } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface TacticFormSelectorProps {
   markers: MarkerData[];
@@ -16,6 +17,7 @@ export default function TacticFormSelector({
   isManualEntry,
   setIsManualEntry,
 }: TacticFormSelectorProps) {
+  const { t } = useTranslation();
   const handleAutoFill = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, markerId: e.target.value }));
   };
@@ -30,12 +32,12 @@ export default function TacticFormSelector({
                 <span className="material-symbols-outlined mr-1 align-middle text-[14px]">
                   magic_button
                 </span>
-                Select existing tactic
+                {t('tactics.selectExistingTactic')}
               </span>
               <button
                 onClick={() => setIsManualEntry(true)}
                 className="bg-surface-variant text-on-surface hover:text-primary mb-[2px] flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded border border-white/10 transition-colors"
-                title="Create New Tactic"
+                title={t('tactics.createNewTactic')}
               >
                 <span className="material-symbols-outlined">add</span>
               </button>
@@ -46,7 +48,7 @@ export default function TacticFormSelector({
               className="bg-surface-container text-on-surface focus:border-primary mt-2 rounded border border-white/10 p-2 text-sm outline-none"
             >
               <option value="" disabled>
-                -- Choose a tactic --
+                {t('tactics.chooseTactic')}
               </option>
               {markers.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -60,7 +62,7 @@ export default function TacticFormSelector({
         <div className="flex items-center justify-between">
           <span className="text-primary font-data-label text-xs font-bold uppercase">
             <span className="material-symbols-outlined mr-1 align-middle text-[14px]">edit</span>
-            Creating New Tactic
+            {t('tactics.creatingNewTactic')}
           </span>
           <button
             onClick={() => {
@@ -68,7 +70,7 @@ export default function TacticFormSelector({
               setFormData((prev) => ({ ...prev, markerId: '' }));
             }}
             className="text-on-surface-variant hover:text-error transition-colors"
-            title="Cancel"
+            title={t('common.cancel')}
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
