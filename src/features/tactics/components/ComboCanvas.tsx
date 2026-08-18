@@ -1,6 +1,7 @@
 import React from 'react';
 import { type ComboData } from '../types';
 import { usePanZoom } from '../../../hooks/usePanZoom';
+import TacticalMarker from './TacticalMarker';
 
 interface ComboCanvasProps {
   mapId?: string;
@@ -86,6 +87,7 @@ export default function ComboCanvas({
               style={{ backgroundImage: `url('${radarImage}')` }}
             ></div>
 
+            {/* Linhas animadas dos Combos */}
             {activeCombo && (
               <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
                 {activeCombo.targets.map((target, idx) => (
@@ -95,7 +97,11 @@ export default function ComboCanvas({
                     y1={`${activeCombo.startY}%`}
                     x2={`${target.endX}%`}
                     y2={`${target.endY}%`}
-                    stroke="rgba(246,174,45,0.6)"
+                    stroke={
+                      activeCombo.side === 'COUNTER-TERRORIST'
+                        ? 'rgba(164,201,255,0.6)'
+                        : 'rgba(246,174,45,0.6)'
+                    }
                     strokeWidth="2"
                     strokeDasharray="6 4"
                     className="animate-dash-flow"
@@ -104,47 +110,40 @@ export default function ComboCanvas({
               </svg>
             )}
 
+            {/* Posições iniciais dos Combos */}
             {uniquePositions.map((pos, idx) => {
               const isSelected = selectedPos?.x === pos.startX && selectedPos?.y === pos.startY;
               if (selectedPos && !isSelected) return null;
+
+              // Como as posições agrupam vários combos, utilizamos a cor base da UI (ou side se precisares)
               return (
-                <button
-                  key={idx}
+                <TacticalMarker
+                  key={`start-${idx}`}
+                  x={pos.startX}
+                  y={pos.startY}
+                  type="COMBO"
+                  isSelected={isSelected}
                   onClick={(e) => onPositionClick({ x: pos.startX, y: pos.startY }, e)}
-                  className={`bg-surface-container absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded border-2 transition-all duration-300 ${
-                    isSelected
-                      ? 'border-primary text-primary z-30 scale-110 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)]'
-                      : 'border-primary/60 text-primary/80 hover:border-primary hover:text-primary z-20 shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:scale-110'
-                  }`}
-                  style={{ top: `${pos.startY}%`, left: `${pos.startX}%` }}
-                >
-                  <span className="material-symbols-outlined text-[18px]">strategy</span>
-                </button>
+                />
               );
             })}
 
+            {/* Alvos finais dos Combos */}
             {activeCombo &&
               activeCombo.targets.map((target, idx) => (
-                <div
+                <TacticalMarker
                   key={`target-${idx}`}
-                  className="bg-surface-container border-primary/50 text-primary absolute z-20 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border shadow-[0_0_10px_rgba(246,174,45,0.4)]"
-                  style={{ top: `${target.endY}%`, left: `${target.endX}%` }}
-                >
-                  <span
-                    className="material-symbols-outlined text-[14px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    {target.type === 'SMOKE'
-                      ? 'cloud'
-                      : target.type === 'FLASH'
-                        ? 'flare'
-                        : 'local_fire_department'}
-                  </span>
-                </div>
+                  x={target.endX}
+                  y={target.endY}
+                  type={target.type}
+                  side={activeCombo.side} // Agora a cor do alvo adapta-se à equipa do Combo!
+                  variant="target"
+                />
               ))}
           </div>
         </div>
 
+        {/* ... botões de zoom iguais ... */}
         <div className="absolute right-4 bottom-4 z-40 flex flex-col gap-2">
           <button
             onClick={handleZoomIn}

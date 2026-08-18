@@ -1,7 +1,12 @@
 import MapCard from '../features/maps/components/MapCard';
 import { mapsDatabase } from '../features/maps/data/maps';
+import { useRankedMaps } from '../features/maps/hooks/useRankedMaps';
 
 export default function MapsView() {
+  const { rankedMaps, isLoading } = useRankedMaps();
+
+  const displayMaps = isLoading ? mapsDatabase : rankedMaps;
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 w-full duration-500">
       <div className="mb-8 flex flex-col gap-2">
@@ -20,8 +25,14 @@ export default function MapsView() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {mapsDatabase.map((map) => (
-            <MapCard key={map.id} name={map.name} image={map.image} />
+          {displayMaps.map((map: any) => (
+            <MapCard
+              key={map.id}
+              name={map.name}
+              image={map.image}
+              grenadesCount={map.grenadesCount}
+              combosCount={map.combosCount}
+            />
           ))}
         </div>
       </section>

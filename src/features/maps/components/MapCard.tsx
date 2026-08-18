@@ -1,16 +1,14 @@
 import { Link } from 'react-router-dom';
-import { useMapItemCount } from '../../tactics/hooks/useMapData';
 
 interface MapCardProps {
   name: string;
   image: string;
+  grenadesCount?: number;
+  combosCount?: number;
 }
 
-export default function MapCard({ name, image }: MapCardProps) {
+export default function MapCard({ name, image, grenadesCount, combosCount }: MapCardProps) {
   const mapSlug = name.toLowerCase().replace(/\s+/g, '-');
-
-  // Utilizando o hook genérico apontado para a coleção de markers
-  const realCount = useMapItemCount('markers', mapSlug);
 
   return (
     <Link
@@ -23,13 +21,23 @@ export default function MapCard({ name, image }: MapCardProps) {
         alt={`CS2 Map ${name}`}
       />
       <div className="from-surface-container-lowest pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent"></div>
-      <div className="absolute bottom-4 left-4 flex flex-col">
+
+      <div className="absolute bottom-4 left-4 flex flex-col gap-1">
         <span className="font-headline-md-mobile text-headline-md-mobile text-primary-container font-bold tracking-wider">
           {name}
         </span>
-        <span className="font-data-label text-data-label text-on-surface-variant">
-          {realCount !== null ? `${realCount} Grenades` : 'Loading...'}
-        </span>
+
+        <div className="flex items-center gap-2">
+          <span className="font-data-label text-data-label text-on-surface-variant">
+            {grenadesCount !== undefined ? `${grenadesCount} Grenades` : 'Loading...'}
+          </span>
+
+          <span className="text-on-surface-variant/50 text-[10px]">●</span>
+
+          <span className="font-data-label text-data-label text-on-surface-variant">
+            {combosCount !== undefined ? `${combosCount} Combos` : '...'}
+          </span>
+        </div>
       </div>
     </Link>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { type MarkerData, type VideoData } from '../types';
 import { usePanZoom } from '../../../hooks/usePanZoom';
+import TacticalMarker from './TacticalMarker';
 
 interface RadarCanvasProps {
   mapId?: string;
@@ -14,6 +15,12 @@ interface RadarCanvasProps {
   hoveredVideo?: VideoData | null;
   isPanelOpen?: boolean;
 }
+
+// Pequeno utilitário para garantir que a coordenada tem sempre o sinal de percentagem
+const formatCoord = (coord: string | number) => {
+  const strCoord = String(coord);
+  return strCoord.endsWith('%') ? strCoord : `${strCoord}%`;
+};
 
 export default function RadarCanvas({
   mapId,
@@ -39,17 +46,8 @@ export default function RadarCanvas({
     handleInnerMouseMove,
   } = usePanZoom(setCoords);
 
-  const getMarkerStyles = (side: string, isSelected: boolean) => {
-    const isCT = side === 'COUNTER-TERRORIST';
-    if (isSelected) {
-      return isCT
-        ? 'border-secondary text-secondary scale-110 shadow-[0_0_25px_5px_rgba(164,201,255,0.5)] z-30'
-        : 'border-primary text-primary scale-110 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)] z-30';
-    }
-    return isCT
-      ? 'border-secondary/60 text-secondary/80 hover:scale-110 hover:border-secondary hover:text-secondary shadow-[0_0_15px_rgba(164,201,255,0.2)] hover:shadow-[0_0_15px_rgba(164,201,255,0.6)] z-10'
-      : 'border-primary/60 text-primary/80 hover:scale-110 hover:border-primary hover:text-primary shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:shadow-[0_0_15px_rgba(246,174,45,0.6)] z-10';
-  };
+  // Encontra o marcador atualmente selecionado para sabermos onde a linha termina e qual a cor (CT ou TR)
+  const activeMarker = markers.find((m) => m.id === selectedMarkerId);
 
   return (
     <main
@@ -91,42 +89,47 @@ export default function RadarCanvas({
               style={{ backgroundImage: `url('${radarImage}')` }}
             ></div>
 
-            {markers.map((marker) => {
-              const isSelected = selectedMarkerId === marker.id;
-              const formatCoord = (coord: string | number) => {
-                const strCoord = String(coord);
-                return strCoord.endsWith('%') ? strCoord : `${strCoord}%`;
-              };
-              return (
-                <button
-                  key={marker.id}
-                  onClick={(e) => onMarkerClick(marker, e)}
-                  className={`bg-surface-container absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
-                  style={{ top: formatCoord(marker.y), left: formatCoord(marker.x) }}
-                >
-                  <span
-                    className="material-symbols-outlined text-xl"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    {marker.type === 'SMOKE'
-                      ? 'cloud'
-                      : marker.type === 'FLASH'
-                        ? 'flare'
-                        : 'local_fire_department'}
-                  </span>
-                </button>
-              );
-            })}
+            {/* Linha animada simulando a trajetória da granada */}
+            {activeMarker && hoveredVideo && hoveredVideo.throwX && hoveredVideo.throwY && (
+              <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
+                <line
+                  x1={formatCoord(hoveredVideo.throwX)}
+                  y1={formatCoord(hoveredVideo.throwY)}
+                  x2={formatCoord(activeMarker.x)}
+                  y2={formatCoord(activeMarker.y)}
+                  stroke={
+                    activeMarker.side === 'COUNTER-TERRORIST'
+                      ? 'rgba(164,201,255,0.6)'
+                      : 'rgba(246,174,45,0.6)'
+                  }
+                  strokeWidth="2"
+                  strokeDasharray="6 4"
+                  className="animate-dash-flow"
+                />
+              </svg>
+            )}
 
+            {/* Marcadores de Táticas */}
+            {markers.map((marker) => (
+              <TacticalMarker
+                key={marker.id}
+                x={marker.x}
+                y={marker.y}
+                type={marker.type}
+                side={marker.side}
+                isSelected={selectedMarkerId === marker.id}
+                onClick={(e) => onMarkerClick(marker, e)}
+              />
+            ))}
+
+            {/* Indicador Hover Fantasma (Posição de onde o jogador lança) */}
             {hoveredVideo && hoveredVideo.throwX && hoveredVideo.throwY && (
-              <div
-                className="pointer-events-none absolute z-40 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 animate-pulse items-center justify-center rounded-full border-2 border-dashed border-white bg-white/20"
-                style={{ top: `${hoveredVideo.throwY}%`, left: `${hoveredVideo.throwX}%` }}
-              >
-                <span className="material-symbols-outlined text-[12px] text-white">
-                  accessibility_new
-                </span>
-              </div>
+              <TacticalMarker
+                x={hoveredVideo.throwX}
+                y={hoveredVideo.throwY}
+                type="THROW_POS"
+                variant="ghost"
+              />
             )}
           </div>
         </div>
