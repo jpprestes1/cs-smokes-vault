@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Navbar() {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, loading, role } = useAuth(); // Importa o estado do usuário
-  console.log(role);
+  const { user, loading, role } = useAuth();
   const navItems = [
-    { name: 'Maps', path: '/maps' },
-    { name: 'Tactics', path: '/tactics' },
-    { name: 'Pro Strats', path: '/pro-strats' },
-    { name: 'Training', path: '/training' },
+    { key: 'nav.maps', path: '/maps' },
+    { key: 'nav.tactics', path: '/tactics' },
+    { key: 'nav.proStrats', path: '/pro-strats' },
+    { key: 'nav.training', path: '/training' },
   ];
 
   const handleLogout = async () => {
@@ -54,7 +56,7 @@ export default function Navbar() {
               const isActive = location.pathname === item.path;
               return (
                 <Link
-                  key={item.name}
+                  key={item.key}
                   to={item.path}
                   className={`border-b-2 pb-1 transition-all duration-300 ease-in-out active:scale-95 ${
                     isActive
@@ -62,7 +64,7 @@ export default function Navbar() {
                       : 'text-on-surface-variant hover:border-primary/50 hover:text-primary border-transparent font-medium'
                   }`}
                 >
-                  {item.name}
+                  {t(item.key)}
                 </Link>
               );
             })}
@@ -79,7 +81,7 @@ export default function Navbar() {
                     <Link
                       to="/admin"
                       className="text-on-surface-variant hover:text-primary transition-colors"
-                      title="Admin Dashboard"
+                      title={t('nav.adminDashboard')}
                     >
                       <span className="material-symbols-outlined text-[20px]">settings</span>
                     </Link>
@@ -89,11 +91,11 @@ export default function Navbar() {
                     onClick={handleLogout}
                     className="text-on-surface-variant hover:text-error font-data-label text-xs font-bold transition-colors"
                   >
-                    LOGOUT
+                    {t('nav.logout').toUpperCase()}
                   </button>
                   <div
                     className="border-primary h-9 w-9 cursor-pointer overflow-hidden rounded-full border-2 transition-all hover:shadow-[0_0_10px_rgba(246,174,45,0.4)]"
-                    title={user.email || 'Profile'}
+                    title={user.email || t('nav.profile')}
                   >
                     <img
                       alt="User Avatar"
@@ -109,18 +111,22 @@ export default function Navbar() {
                     to="/login"
                     className="text-on-surface hover:text-primary font-data-label text-xs font-bold transition-colors"
                   >
-                    LOGIN
+                    {t('nav.login').toUpperCase()}
                   </Link>
                   <Link
                     to="/register"
                     className="bg-primary text-on-primary font-data-label rounded px-4 py-2 text-xs font-bold transition-transform active:scale-95"
                   >
-                    REGISTER
+                    {t('nav.register').toUpperCase()}
                   </Link>
                 </div>
               )}
             </div>
           )}
+
+          <div className="hidden md:block">
+            <LanguageSwitcher />
+          </div>
 
           {/* Botão Menu Mobile */}
           <button
@@ -145,7 +151,7 @@ export default function Navbar() {
           const isActive = location.pathname === item.path;
           return (
             <Link
-              key={item.name}
+              key={item.key}
               to={item.path}
               onClick={() => setIsMenuOpen(false)}
               className={`flex items-center gap-2 border-b border-white/5 py-3 transition-all duration-300 ${
@@ -157,7 +163,7 @@ export default function Navbar() {
               {isActive && (
                 <span className="bg-primary inline-block h-1.5 w-1.5 rounded-full"></span>
               )}
-              {item.name}
+              {t(item.key)}
             </Link>
           );
         })}
@@ -171,13 +177,13 @@ export default function Navbar() {
                   onClick={handleLogout}
                   className="text-on-surface-variant hover:text-error font-data-label text-xs font-bold transition-colors"
                 >
-                  LOGOUT
+                  {t('nav.logout').toUpperCase()}
                 </button>
                 {role === 'ADMIN' && (
                   <Link
                     to="/admin"
                     className="text-on-surface-variant hover:text-primary transition-colors"
-                    title="Admin Dashboard"
+                    title={t('nav.adminDashboard')}
                   >
                     <span className="material-symbols-outlined text-[20px]">settings</span>
                   </Link>
@@ -190,17 +196,21 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                   className="bg-surface-variant/50 text-on-surface font-data-label rounded py-2 text-center text-xs font-bold"
                 >
-                  LOGIN
+                  {t('nav.login').toUpperCase()}
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setIsMenuOpen(false)}
                   className="bg-primary text-on-primary font-data-label rounded py-2 text-center text-xs font-bold"
                 >
-                  REGISTER
+                  {t('nav.register').toUpperCase()}
                 </Link>
               </div>
             )}
+
+            <div className="pt-1">
+              <LanguageSwitcher />
+            </div>
           </div>
         )}
       </div>

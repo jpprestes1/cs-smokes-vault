@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { type MarkerData, type TacticFormData } from '../types';
@@ -22,6 +23,7 @@ export default function TacticForm({
   onClose,
   initialData,
 }: TacticFormProps) {
+  const { t } = useTranslation();
   const isMobile = window.innerWidth < 768;
   const [isManualEntry, setIsManualEntry] = useState(!!initialData); // Já abre manual se for edição
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +54,7 @@ export default function TacticForm({
   const handleSubmit = async () => {
     // Validação básica do formulário manual
     if (isManualEntry && (!formData.title || !formData.x || !formData.y)) {
-      showToast('Please fill in the Title, X and Y coordinates.', 'error');
+      showToast(t('tactics.formErrors.fillTitleXY'), 'error');
       return;
     }
 
@@ -62,7 +64,7 @@ export default function TacticForm({
       !formData.markerId &&
       (!formData.videoUrl || !formData.throwX || !formData.throwY)
     ) {
-      showToast('Video URL and Throw Coordinates are mandatory.', 'error');
+      showToast(t('tactics.formErrors.videoAndThrowRequired'), 'error');
       return;
     }
 
@@ -95,7 +97,7 @@ export default function TacticForm({
         }
 
         await updateDoc(doc(db, 'markers', initialData.id), updatePayload);
-        showToast('Tactic updated successfully!', 'success');
+        showToast(t('tactics.formSuccess.tacticUpdated'), 'success');
         setTimeout(() => onClose(), 1500);
         return;
       }
@@ -130,10 +132,10 @@ export default function TacticForm({
         });
       }
 
-      showToast('Action successful!', 'success');
+      showToast(t('tactics.formSuccess.actionSuccess'), 'success');
       setTimeout(() => onClose(), 1500);
     } catch (error) {
-      showToast('Error saving to database.', 'error');
+      showToast(t('tactics.formErrors.saveDb'), 'error');
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -158,7 +160,7 @@ export default function TacticForm({
           <span className="material-symbols-outlined">
             {initialData ? 'edit' : 'add_location_alt'}
           </span>
-          {initialData ? 'EDIT TACTIC' : 'ADD TACTIC'}
+          {initialData ? t('tactics.editTactic') : t('maps.addTactic')}
         </h3>
         <button
           onClick={onClose}
@@ -199,7 +201,11 @@ export default function TacticForm({
               : 'bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(246,174,45,0.4)] active:scale-95'
           }`}
         >
-          {isSubmitting ? 'SAVING...' : initialData ? 'UPDATE TACTIC' : 'PUBLISH TACTIC'}
+          {isSubmitting
+            ? t('common.saving').toUpperCase()
+            : initialData
+              ? t('tactics.updateTactic')
+              : t('tactics.publishTactic')}
         </button>
       </div>
     </div>

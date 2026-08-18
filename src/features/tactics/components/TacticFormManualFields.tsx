@@ -1,4 +1,5 @@
 import { type TacticFormData } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface TacticFormManualFieldsProps {
   formData: TacticFormData;
@@ -9,13 +10,14 @@ export default function TacticFormManualFields({
   formData,
   setFormData,
 }: TacticFormManualFieldsProps) {
+  const { t } = useTranslation();
   return (
     <div className="animate-in fade-in slide-in-from-top-2 flex flex-col gap-4 duration-300">
       <label className="flex flex-col gap-1">
-        <span className="text-on-surface-variant font-data-label text-xs">TITLE</span>
+        <span className="text-on-surface-variant font-data-label text-xs">{t('common.title')}</span>
         <input
           type="text"
-          placeholder="Ex: CT Ticket Booth Smoke"
+          placeholder={t('tactics.placeholders.tacticTitle')}
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="bg-surface-variant/20 text-on-surface focus:border-primary rounded border border-white/10 p-2 text-sm outline-none"
@@ -24,46 +26,54 @@ export default function TacticFormManualFields({
 
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1">
-          <span className="text-on-surface-variant font-data-label text-xs">TYPE</span>
+          <span className="text-on-surface-variant font-data-label text-xs">
+            {t('common.type')}
+          </span>
           <select
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
             className="bg-surface-variant/20 text-on-surface focus:border-primary [&>option]:bg-surface-container rounded border border-white/10 p-2 text-sm outline-none"
           >
-            <option value="SMOKE">SMOKE</option>
-            <option value="FLASH">FLASH</option>
-            <option value="MOLOTOV">MOLOTOV</option>
+            <option value="SMOKE">{t('common.smoke')}</option>
+            <option value="FLASH">{t('common.flash')}</option>
+            <option value="MOLOTOV">{t('common.molotov')}</option>
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-on-surface-variant font-data-label text-xs">SIDE</span>
+          <span className="text-on-surface-variant font-data-label text-xs">
+            {t('common.side')}
+          </span>
           <select
             value={formData.side}
             onChange={(e) => setFormData({ ...formData, side: e.target.value })}
             className="bg-surface-variant/20 text-on-surface focus:border-primary [&>option]:bg-surface-container rounded border border-white/10 p-2 text-sm outline-none"
           >
-            <option value="TERRORIST">TERRORIST</option>
-            <option value="COUNTER-TERRORIST">CT</option>
+            <option value="TERRORIST">{t('maps.sideT')}</option>
+            <option value="COUNTER-TERRORIST">{t('maps.sideCt')}</option>
           </select>
         </label>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col gap-1">
-          <span className="text-on-surface-variant font-data-label text-xs">COORD X (%)</span>
+          <span className="text-on-surface-variant font-data-label text-xs">
+            {t('tactics.coordX')}
+          </span>
           <input
             type="number"
-            placeholder="Ex: 45"
+            placeholder={t('common.example45')}
             value={formData.x}
             onChange={(e) => setFormData({ ...formData, x: e.target.value })}
             className="bg-surface-variant/20 text-on-surface focus:border-primary rounded border border-white/10 p-2 text-sm outline-none"
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-on-surface-variant font-data-label text-xs">COORD Y (%)</span>
+          <span className="text-on-surface-variant font-data-label text-xs">
+            {t('tactics.coordY')}
+          </span>
           <input
             type="number"
-            placeholder="Ex: 50"
+            placeholder={t('common.example50')}
             value={formData.y}
             onChange={(e) => setFormData({ ...formData, y: e.target.value })}
             className="bg-surface-variant/20 text-on-surface focus:border-primary rounded border border-white/10 p-2 text-sm outline-none"
@@ -72,10 +82,12 @@ export default function TacticFormManualFields({
       </div>
 
       <label className="flex flex-col gap-1">
-        <span className="text-on-surface-variant font-data-label text-xs">DESCRIPTION</span>
+        <span className="text-on-surface-variant font-data-label text-xs">
+          {t('common.description')}
+        </span>
         <textarea
           rows={3}
-          placeholder="Lineup instructions..."
+          placeholder={t('tactics.placeholders.lineupInstructions')}
           value={formData.desc}
           onChange={(e) => setFormData({ ...formData, desc: e.target.value })}
           className="bg-surface-variant/20 text-on-surface focus:border-primary resize-none rounded border border-white/10 p-2 text-sm outline-none"

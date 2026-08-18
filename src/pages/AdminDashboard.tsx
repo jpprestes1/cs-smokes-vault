@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { type UserRole } from '../features/auth/hooks/useAuth';
@@ -10,6 +11,7 @@ interface UserProfile {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,7 +43,7 @@ export default function AdminDashboard() {
       setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
     } catch (error) {
       console.error('Error updating role:', error);
-      alert('Failed to update role. Check console.');
+      alert(t('admin.updateRoleFailed'));
     }
   };
 
@@ -52,7 +54,7 @@ export default function AdminDashboard() {
           admin_panel_settings
         </span>
         <h1 className="font-display-lg text-on-surface text-3xl tracking-tight uppercase">
-          Admin Dashboard
+          {t('admin.title')}
         </h1>
       </div>
 
@@ -61,16 +63,16 @@ export default function AdminDashboard() {
           <table className="w-full text-left text-sm">
             <thead className="bg-surface-variant/50 font-data-label text-on-surface-variant text-xs uppercase">
               <tr>
-                <th className="px-6 py-4">User Email</th>
-                <th className="px-6 py-4">Current Role</th>
-                <th className="px-6 py-4">Action</th>
+                <th className="px-6 py-4">{t('admin.userEmail')}</th>
+                <th className="px-6 py-4">{t('admin.currentRole')}</th>
+                <th className="px-6 py-4">{t('admin.action')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {isLoading ? (
                 <tr>
                   <td colSpan={3} className="px-6 py-8 text-center">
-                    Loading operatives...
+                    {t('admin.loadingOperatives')}
                   </td>
                 </tr>
               ) : (

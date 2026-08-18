@@ -1,4 +1,5 @@
 import { type MarkerData, type VideoData } from '../types';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/hooks/useAuth';
 import VideoCard from '../../../components/shared/VideoCard';
 
@@ -21,6 +22,7 @@ export default function TacticDetails({
   onDeleteVideo,
   onEditVideo,
 }: TacticDetailsProps) {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const canEdit = role === 'ADMIN' || role === 'CREATOR';
   const canDelete = role === 'ADMIN';
@@ -31,7 +33,7 @@ export default function TacticDetails({
 
       <div className="mt-2">
         <h4 className="font-data-label text-data-label text-on-surface-variant mb-4 border-b border-white/10 pb-2">
-          AVAILABLE GUIDES
+          {t('tactics.availableGuides')}
         </h4>
         <div className="grid grid-cols-2 gap-4">
           {marker.videos?.map((video) => (
@@ -57,7 +59,7 @@ export default function TacticDetails({
               onClick={onEdit}
               className="bg-surface-variant text-on-surface hover:text-primary flex-1 rounded py-2 text-xs font-bold transition-colors"
             >
-              EDIT TACTIC
+              {t('tactics.editTactic')}
             </button>
           )}
           {canDelete && (
@@ -65,7 +67,7 @@ export default function TacticDetails({
               onClick={onDelete}
               className="flex-1 rounded bg-red-500/10 py-2 text-xs font-bold text-red-400 transition-colors hover:bg-red-500/20"
             >
-              DELETE
+              {t('common.delete').toUpperCase()}
             </button>
           )}
         </div>

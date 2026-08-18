@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { Home, MapsView, MapDetail } from './pages';
@@ -8,10 +9,12 @@ import AdminRoute from './features/auth/components/AdminRoutes';
 import AdminDashboard from './pages/AdminDashboard';
 
 function ComingSoon() {
+  const { t } = useTranslation();
+
   return (
     <div className="text-on-surface-variant bg-surface-container-low animate-in zoom-in-95 flex min-h-[50vh] flex-grow flex-col items-center justify-center gap-4 rounded-lg border border-white/5 duration-300">
       <span className="material-symbols-outlined text-primary/50 text-4xl">construction</span>
-      <h2 className="font-headline-md text-2xl">Content Coming Soon...</h2>
+      <h2 className="font-headline-md text-2xl">{t('app.comingSoon')}</h2>
     </div>
   );
 }

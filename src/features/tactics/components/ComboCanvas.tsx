@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { type ComboData } from '../types';
 import { usePanZoom } from '../../../hooks/usePanZoom';
 import TacticalMarker from './TacticalMarker';
@@ -28,6 +29,7 @@ export default function ComboCanvas({
   onMapClick,
   isPanelOpen,
 }: ComboCanvasProps) {
+  const { t } = useTranslation();
   const {
     zoom,
     scrollRef,
@@ -58,10 +60,10 @@ export default function ComboCanvas({
 
       <div className="pointer-events-none absolute top-6 left-6 z-20 flex flex-col gap-2">
         <div className="bg-surface-container/90 text-primary font-data-label text-data-label rounded-sm border border-white/10 px-3 py-1 uppercase backdrop-blur">
-          EXECUTES // {mapId?.toUpperCase()}
+          {t('tactics.executesLabel')} // {mapId?.toUpperCase()}
         </div>
         <div className="font-data-label text-on-surface-variant text-xs">
-          COORD:{' '}
+          {t('tactics.coordLabel')}:{' '}
           <span className="font-mono">
             X:{String(coords.x).padStart(2, '0')} Y:{String(coords.y).padStart(2, '0')}
           </span>

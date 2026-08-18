@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { mapsDatabase } from '../features/maps/data/maps';
 import { doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
@@ -17,6 +18,7 @@ import ComboForm from '../features/tactics/components/ComboForm';
 import { db } from '../lib/firebase';
 
 export default function MapDetail() {
+  const { t } = useTranslation();
   const { mapId, view } = useParams();
   const navigate = useNavigate();
 
@@ -96,7 +98,7 @@ export default function MapDetail() {
   const handleDeleteItem = async (collectionName: string, id: string) => {
     if (
       window.confirm(
-        `Are you sure you want to delete this ${collectionName === 'markers' ? 'tactic' : 'combo'}?`
+        collectionName === 'markers' ? t('maps.deleteTacticConfirm') : t('maps.deleteComboConfirm')
       )
     ) {
       await deleteDoc(doc(db, collectionName, id));
@@ -109,7 +111,7 @@ export default function MapDetail() {
     parentId: string,
     videoId: string
   ) => {
-    if (window.confirm('Are you sure you want to delete this video?')) {
+    if (window.confirm(t('maps.deleteVideoConfirm'))) {
       try {
         const docRef = doc(db, collectionName, parentId);
         const docSnap = await getDoc(docRef);
@@ -129,7 +131,13 @@ export default function MapDetail() {
     parentId: string,
     video: VideoData
   ) => {
-    alert(`Editar vídeo "${video.title}" na coleção ${collectionName}/${parentId}`);
+    alert(
+      t('maps.editVideoAlert', {
+        title: video.title,
+        collectionName,
+        parentId,
+      })
+    );
   };
 
   if (!view) {
@@ -218,12 +226,12 @@ export default function MapDetail() {
                         }}
                         className="text-on-surface-variant hover:text-primary flex items-center gap-1 text-xs font-bold transition-colors"
                       >
-                        <span className="material-symbols-outlined text-sm">arrow_back</span> BACK
-                        TO LIST
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>{' '}
+                        {t('maps.backToList')}
                       </button>
                     ) : (
                       <span className="font-data-label text-on-surface-variant text-xs font-bold tracking-widest uppercase">
-                        Execute Details
+                        {t('maps.executeDetails')}
                       </span>
                     )}
                     <button

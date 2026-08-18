@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface MapCardProps {
   name: string;
@@ -8,6 +9,7 @@ interface MapCardProps {
 }
 
 export default function MapCard({ name, image, grenadesCount, combosCount }: MapCardProps) {
+  const { t } = useTranslation();
   const mapSlug = name.toLowerCase().replace(/\s+/g, '-');
 
   return (
@@ -29,13 +31,15 @@ export default function MapCard({ name, image, grenadesCount, combosCount }: Map
 
         <div className="flex items-center gap-2">
           <span className="font-data-label text-data-label text-on-surface-variant">
-            {grenadesCount !== undefined ? `${grenadesCount} Grenades` : 'Loading...'}
+            {grenadesCount !== undefined
+              ? t('maps.grenadesCount', { count: grenadesCount })
+              : t('maps.loading')}
           </span>
 
           <span className="text-on-surface-variant/50 text-[10px]">●</span>
 
           <span className="font-data-label text-data-label text-on-surface-variant">
-            {combosCount !== undefined ? `${combosCount} Combos` : '...'}
+            {combosCount !== undefined ? t('maps.combosCount', { count: combosCount }) : '...'}
           </span>
         </div>
       </div>

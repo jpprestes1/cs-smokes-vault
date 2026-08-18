@@ -1,4 +1,5 @@
 import { type VideoData } from '../../features/tactics/types';
+import { useTranslation } from 'react-i18next';
 
 interface VideoCardProps {
   video: VideoData;
@@ -47,6 +48,7 @@ export default function VideoCard({
   onEdit,
   onDelete,
 }: VideoCardProps) {
+  const { t } = useTranslation();
   const config =
     platformConfig[video.platform as keyof typeof platformConfig] || platformConfig.youtube;
 
@@ -100,7 +102,7 @@ export default function VideoCard({
           </span>
           {video.author && (
             <span className="font-data-label text-on-surface-variant truncate text-[10px]">
-              by {video.author}
+              {t('common.by')} {video.author}
             </span>
           )}
         </div>
@@ -114,7 +116,7 @@ export default function VideoCard({
                   onEdit(video);
                 }}
                 className="rounded p-1 text-blue-500/70 transition-colors hover:bg-blue-500/10 hover:text-blue-400"
-                title="Edit Video"
+                title={t('tactics.editVideo')}
               >
                 <span className="material-symbols-outlined text-[16px]">edit</span>
               </button>
@@ -126,7 +128,7 @@ export default function VideoCard({
                   onDelete(video.id);
                 }}
                 className="rounded p-1 text-red-500/70 transition-colors hover:bg-red-500/10 hover:text-red-400"
-                title="Delete Video"
+                title={t('tactics.deleteVideo')}
               >
                 <span className="material-symbols-outlined text-[16px]">delete</span>
               </button>

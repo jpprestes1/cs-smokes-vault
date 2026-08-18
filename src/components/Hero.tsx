@@ -1,4 +1,8 @@
+import { useTranslation } from 'react-i18next';
+
 export default function Hero() {
+  const { t } = useTranslation();
+
   return (
     <section className="bg-surface-container-lowest relative mt-4 flex h-[400px] w-full items-center justify-center overflow-hidden rounded-lg border border-white/10 shadow-2xl md:mt-0 md:h-[500px]">
       <div className="scanline-bg pointer-events-none absolute inset-0 z-10 opacity-20"></div>
@@ -16,11 +20,10 @@ export default function Hero() {
         />
 
         <h1 className="font-display-lg text-on-surface mb-2 text-3xl leading-tight tracking-tight uppercase md:mb-4 md:text-[48px]">
-          Master the Meta
+          {t('hero.title')}
         </h1>
         <p className="font-body-base text-on-surface-variant mb-6 max-w-xl text-sm md:mb-8 md:text-base">
-          The definitive database for Counter-Strike 2 tactical utility. Find, learn, and execute
-          precision smokes, flashes, and molotovs used by top-tier professionals.
+          {t('hero.description')}
         </p>
 
         {/* Search Bar */}
@@ -30,11 +33,11 @@ export default function Hero() {
           </span>
           <input
             className="bg-surface-container-high border-outline-variant focus:border-primary-container text-on-surface font-data-label placeholder-on-surface-variant/50 w-full rounded-t-sm border-b py-3 pl-10 text-xs transition-colors outline-none focus:ring-0 md:py-4 md:pl-12 md:text-sm"
-            placeholder="Search map, utility... (e.g. 'Mirage Window')"
+            placeholder={t('hero.searchPlaceholder')}
             type="text"
           />
           <button className="bg-primary-container text-on-primary-fixed font-data-label absolute right-1 rounded-sm px-3 py-2 text-xs font-bold hover:opacity-90 md:right-2 md:px-4 md:text-sm">
-            EXECUTE
+            {t('hero.execute').toUpperCase()}
           </button>
         </div>
       </div>
