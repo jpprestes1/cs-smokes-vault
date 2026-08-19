@@ -160,6 +160,7 @@ export default function RadarCanvas({
                   count={count}
                   isSelected={isSelected}
                   onClick={(e) => onMarkerGroupClick(group, e)}
+                  zoom={zoom}
                 />
               );
             })}
@@ -171,6 +172,7 @@ export default function RadarCanvas({
                 y={hoveredVideo.throwY}
                 type="THROW_POS"
                 variant="ghost"
+                zoom={zoom}
               />
             )}
           </div>

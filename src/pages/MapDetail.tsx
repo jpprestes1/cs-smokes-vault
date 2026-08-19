@@ -49,8 +49,17 @@ export default function MapDetail() {
     return marker.side === activeSide.toUpperCase();
   });
 
+  const visibleCombos = combos.filter((combo) => {
+    if (activeSide === 'All Sides') return true;
+    return combo.side === activeSide.toUpperCase();
+  });
+
   const combosAtPosition = selectedComboPos
-    ? combos.filter((c) => c.startX === selectedComboPos.x && c.startY === selectedComboPos.y)
+    ? visibleCombos.filter(
+        (c) =>
+          Math.round(Number(c.startX)) === selectedComboPos.x &&
+          Math.round(Number(c.startY)) === selectedComboPos.y
+      )
     : [];
 
   const isPanelOpen = selectedMarker !== null || isAddingTactic || selectedMarkerGroup !== null;
@@ -69,8 +78,15 @@ export default function MapDetail() {
 
   const handlePositionClick = (pos: { x: number; y: number }, e: React.MouseEvent) => {
     e.stopPropagation();
+    const atPos = visibleCombos.filter(
+      (c) => Math.round(Number(c.startX)) === pos.x && Math.round(Number(c.startY)) === pos.y
+    );
     setSelectedComboPos(pos);
-    setSelectedCombo(null);
+    if (atPos.length === 1) {
+      setSelectedCombo(atPos[0]);
+    } else {
+      setSelectedCombo(null);
+    }
     setIsAddingTactic(false);
     setIsEditingTactic(false);
     setHoveredCombo(null);
@@ -213,7 +229,7 @@ export default function MapDetail() {
           <ComboCanvas
             mapId={mapId}
             radarImage={currentMap?.radarImage}
-            combos={combos}
+            combos={visibleCombos}
             selectedPos={selectedComboPos}
             activeCombo={hoveredCombo || selectedCombo}
             coords={coords}
