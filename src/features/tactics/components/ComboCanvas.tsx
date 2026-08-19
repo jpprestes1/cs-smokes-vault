@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type ComboData } from '../types';
 import { usePanZoom } from '../../../hooks/usePanZoom';
@@ -42,12 +42,15 @@ export default function ComboCanvas({
     handleInnerMouseMove,
   } = usePanZoom(setCoords);
 
-  const uniquePositions = Array.from(new Set(combos.map((c) => `${c.startX},${c.startY}`))).map(
-    (key) => {
-      const [x, y] = key.split(',');
-      return { startX: Number(x), startY: Number(y) };
-    }
-  );
+  const groupedCombos = useMemo(() => {
+    const groups: Record<string, ComboData[]> = {};
+    combos.forEach((c) => {
+      const key = `${Math.round(Number(c.startX))},${Math.round(Number(c.startY))}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(c);
+    });
+    return Object.values(groups);
+  }, [combos]);
 
   return (
     <main
@@ -113,19 +116,41 @@ export default function ComboCanvas({
             )}
 
             {/* Posições iniciais dos Combos */}
-            {uniquePositions.map((pos, idx) => {
-              const isSelected = selectedPos?.x === pos.startX && selectedPos?.y === pos.startY;
+            {groupedCombos.map((group, idx) => {
+              const first = group[0];
+              const posX = Math.round(Number(first.startX));
+              const posY = Math.round(Number(first.startY));
+
+              const isSelected = selectedPos?.x === posX && selectedPos?.y === posY;
               if (selectedPos && !isSelected) return null;
 
-              // Como as posições agrupam vários combos, utilizamos a cor base da UI (ou side se precisares)
+              const activeInGroup =
+                activeCombo && group.some((c) => c.id === activeCombo.id) ? activeCombo : null;
+
+              const count = activeInGroup ? 1 : group.length;
+
+              const hasT = group.some((c) => c.side === 'TERRORIST');
+              const hasCT = group.some((c) => c.side === 'COUNTER-TERRORIST');
+
+              const side = activeInGroup
+                ? activeInGroup.side
+                : hasT && hasCT
+                  ? 'MIXED'
+                  : hasCT
+                    ? 'COUNTER-TERRORIST'
+                    : 'TERRORIST';
+
               return (
                 <TacticalMarker
                   key={`start-${idx}`}
-                  x={pos.startX}
-                  y={pos.startY}
+                  x={first.startX}
+                  y={first.startY}
                   type="COMBO"
+                  side={side}
+                  count={count}
                   isSelected={isSelected}
-                  onClick={(e) => onPositionClick({ x: pos.startX, y: pos.startY }, e)}
+                  onClick={(e) => onPositionClick({ x: posX, y: posY }, e)}
+                  zoom={zoom}
                 />
               );
             })}
@@ -140,6 +165,7 @@ export default function ComboCanvas({
                   type={target.type}
                   side={activeCombo.side} // Agora a cor do alvo adapta-se à equipa do Combo!
                   variant="target"
+                  zoom={zoom}
                 />
               ))}
           </div>
