@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import TacticForm from './TacticForm';
 import TacticDetails from './TacticDetails';
 import TacticVideoPlayer from './TacticVideoPlayer';
+import MarkerList from './MarkerList';
 
 interface TacticalPanelProps {
   marker: MarkerData | null;
+  markerGroup: MarkerData[] | null;
   selectedVideo: VideoData | null;
   isAdding: boolean;
   isEditing: boolean;
@@ -13,6 +15,8 @@ interface TacticalPanelProps {
   markers: MarkerData[];
   coords: { x: number; y: number };
   onClose: () => void;
+  onSelectMarker: (marker: MarkerData) => void;
+  onBackToList: () => void;
   onSelectVideo: (video: VideoData | null) => void;
   onHoverVideo: (video: VideoData | null) => void;
   onEdit: () => void;
@@ -23,6 +27,7 @@ interface TacticalPanelProps {
 
 export default function TacticalPanel({
   marker,
+  markerGroup,
   selectedVideo,
   isAdding,
   isEditing,
@@ -30,6 +35,8 @@ export default function TacticalPanel({
   markers,
   coords,
   onClose,
+  onSelectMarker,
+  onBackToList,
   onSelectVideo,
   onHoverVideo,
   onEdit,
@@ -38,7 +45,7 @@ export default function TacticalPanel({
   onEditVideo,
 }: TacticalPanelProps) {
   const { t } = useTranslation();
-  const isOpen = marker !== null || isAdding;
+  const isOpen = marker !== null || isAdding || markerGroup !== null;
 
   const typeLabel = (type: string) => {
     if (type === 'SMOKE') return t('common.smoke');
@@ -71,6 +78,15 @@ export default function TacticalPanel({
         <>
           <div className="flex shrink-0 items-start justify-between border-b border-white/10 px-6 py-5">
             <div className="flex flex-col gap-2">
+              {markerGroup && markerGroup.length > 1 && (
+                <button
+                  onClick={onBackToList}
+                  className="text-on-surface-variant hover:text-primary mb-1 flex items-center gap-1 text-xs font-bold transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">arrow_back</span>{' '}
+                  {t('maps.backToList')}
+                </button>
+              )}
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-on-surface-variant text-sm">
                   {marker.type === 'SMOKE'
@@ -83,7 +99,11 @@ export default function TacticalPanel({
                   {typeLabel(marker.type)}
                 </span>
                 <span
-                  className={`font-data-label text-data-label ${marker.side === 'TERRORIST' ? 'text-primary border-primary/30 bg-primary/10' : 'text-secondary border-secondary/30 bg-secondary/10'} rounded-sm border px-2 py-0.5 tracking-widest uppercase`}
+                  className={`font-data-label text-data-label ${
+                    marker.side === 'TERRORIST'
+                      ? 'text-primary border-primary/30 bg-primary/10'
+                      : 'text-secondary border-secondary/30 bg-secondary/10'
+                  } rounded-sm border px-2 py-0.5 tracking-widest uppercase`}
                 >
                   {sideLabel(marker.side)}
                 </span>
@@ -99,7 +119,6 @@ export default function TacticalPanel({
               <span className="material-symbols-outlined p-1">close</span>
             </button>
           </div>
-
           <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
             {!selectedVideo ? (
               <TacticDetails
@@ -116,6 +135,8 @@ export default function TacticalPanel({
             )}
           </div>
         </>
+      ) : markerGroup ? (
+        <MarkerList markers={markerGroup} onSelectMarker={onSelectMarker} onClose={onClose} />
       ) : null}
     </aside>
   );

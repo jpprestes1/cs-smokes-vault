@@ -18,6 +18,7 @@ export default function TacticFormSelector({
   setIsManualEntry,
 }: TacticFormSelectorProps) {
   const { t } = useTranslation();
+
   const handleAutoFill = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, markerId: e.target.value }));
   };
@@ -26,7 +27,8 @@ export default function TacticFormSelector({
     <div className="bg-primary/5 border-primary/20 rounded-lg border p-4">
       {!isManualEntry ? (
         <div className="flex items-end gap-2">
-          <label className="flex flex-1 flex-col gap-1">
+          {/* Adicionado min-w-0 para evitar o overflow do flex */}
+          <label className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex items-end justify-between gap-2">
               <span className="text-primary font-data-label text-xs font-bold uppercase">
                 <span className="material-symbols-outlined mr-1 align-middle text-[14px]">
@@ -45,7 +47,8 @@ export default function TacticFormSelector({
             <select
               value={formData.markerId}
               onChange={handleAutoFill}
-              className="bg-surface-container text-on-surface focus:border-primary mt-2 rounded border border-white/10 p-2 text-sm outline-none"
+              // Adicionado w-full e truncate para tratar o texto longo
+              className="bg-surface-container text-on-surface focus:border-primary mt-2 w-full truncate rounded border border-white/10 p-2 text-sm outline-none"
             >
               <option value="" disabled>
                 {t('tactics.chooseTactic')}
