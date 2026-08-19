@@ -10,6 +10,7 @@ interface TacticalMarkerProps {
   isSelected?: boolean;
   variant?: 'button' | 'target' | 'ghost';
   onClick?: (e: React.MouseEvent) => void;
+  count?: number;
 }
 
 const getIcon = (type: string) => {
@@ -42,8 +43,10 @@ export default function TacticalMarker({
   isSelected = false,
   variant = 'button',
   onClick,
+  count = 1,
 }: TacticalMarkerProps) {
   const isCT = side === 'COUNTER-TERRORIST';
+  const isMixed = side === 'MIXED';
   const icon = getIcon(type);
 
   // Variante: Fantasma de Lançamento (Pulsante e Transparente)
@@ -80,35 +83,61 @@ export default function TacticalMarker({
   }
 
   // Variante Padrão: Botão Interativo (Granadas no Radar e Início de Combos)
-  const baseButtonClasses =
-    'bg-surface-container absolute flex -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center border-2 transition-all duration-300';
   const shapeClass = type === 'COMBO' ? 'rounded h-8 w-8' : 'rounded-full h-8 w-8';
+  // A div interna deve ter exatamente o mesmo formato que a externa para não "vazar" nos cantos
+  const innerShapeClass = type === 'COMBO' ? 'rounded h-full w-full' : 'rounded-full h-full w-full';
   const iconSize = type === 'COMBO' ? 'text-[18px]' : 'text-xl';
 
-  let styleClasses = '';
+  let wrapperClasses = `absolute flex -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center transition-all duration-300 ${shapeClass}`;
+  let innerClasses = '';
 
   if (isSelected) {
-    styleClasses = isCT
-      ? 'border-secondary text-secondary scale-110 shadow-[0_0_25px_5px_rgba(164,201,255,0.5)] z-30'
-      : 'border-primary text-primary scale-110 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)] z-30';
+    if (isMixed) {
+      // Degradê com corte "duro" exato no meio usando from-50% e to-50%, com padding de 2px para simular a borda
+      wrapperClasses +=
+        ' scale-110 shadow-[0_0_25px_5px_rgba(255,255,255,0.3)] z-30 p-[2px] bg-gradient-to-br from-primary from-50% to-secondary to-50%';
+      innerClasses = `bg-surface-container flex items-center justify-center text-on-surface ${innerShapeClass}`;
+    } else if (isCT) {
+      wrapperClasses +=
+        ' border-2 bg-surface-container border-secondary text-secondary scale-110 shadow-[0_0_25px_5px_rgba(164,201,255,0.5)] z-30';
+    } else {
+      wrapperClasses +=
+        ' border-2 bg-surface-container border-primary text-primary scale-110 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)] z-30';
+    }
   } else {
-    styleClasses = isCT
-      ? 'border-secondary/60 text-secondary/80 hover:scale-110 hover:border-secondary hover:text-secondary shadow-[0_0_15px_rgba(164,201,255,0.2)] hover:shadow-[0_0_15px_rgba(164,201,255,0.6)] z-10 hover:z-20'
-      : 'border-primary/60 text-primary/80 hover:scale-110 hover:border-primary hover:text-primary shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:shadow-[0_0_15px_rgba(246,174,45,0.6)] z-10 hover:z-20';
+    if (isMixed) {
+      // Mantendo o corte "duro" e opacidade nos estados inativos e de hover
+      wrapperClasses +=
+        ' hover:scale-110 shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_15px_rgba(255,255,255,0.5)] z-10 hover:z-20 p-[2px] bg-gradient-to-br from-primary/70 from-50% to-secondary/70 to-50% hover:from-primary hover:to-secondary';
+      innerClasses = `bg-surface-container flex items-center justify-center text-on-surface/80 hover:text-on-surface ${innerShapeClass}`;
+    } else if (isCT) {
+      wrapperClasses +=
+        ' border-2 bg-surface-container border-secondary/60 text-secondary/80 hover:scale-110 hover:border-secondary hover:text-secondary shadow-[0_0_15px_rgba(164,201,255,0.2)] hover:shadow-[0_0_15px_rgba(164,201,255,0.6)] z-10 hover:z-20';
+    } else {
+      wrapperClasses +=
+        ' border-2 bg-surface-container border-primary/60 text-primary/80 hover:scale-110 hover:border-primary hover:text-primary shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:shadow-[0_0_15px_rgba(246,174,45,0.6)] z-10 hover:z-20';
+    }
   }
 
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseButtonClasses} ${shapeClass} ${styleClasses}`}
-      style={{ top: formatCoord(y), left: formatCoord(x) }}
-    >
+  const content =
+    count > 1 ? (
+      <span className="font-data-label text-sm font-bold">{count}</span>
+    ) : (
       <span
         className={`material-symbols-outlined ${iconSize}`}
         style={type !== 'COMBO' ? { fontVariationSettings: "'FILL' 1" } : {}}
       >
         {icon}
       </span>
+    );
+
+  return (
+    <button
+      onClick={onClick}
+      className={wrapperClasses}
+      style={{ top: formatCoord(y), left: formatCoord(x) }}
+    >
+      {isMixed ? <div className={innerClasses}>{content}</div> : content}
     </button>
   );
 }

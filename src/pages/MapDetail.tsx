@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { mapsDatabase } from '../features/maps/data/maps';
 import { doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
+
 import MapSideNav from '../features/maps/components/MapSideNav';
 import RadarCanvas from '../features/tactics/components/RadarCanvas';
 import TacticalPanel from '../features/tactics/components/TacticalPanel';
@@ -11,10 +12,11 @@ import MobileMenu from '../components/MobileMenu';
 import ComboDetails from '../features/tactics/components/ComboDetails';
 import TacticVideoPlayer from '../features/tactics/components/TacticVideoPlayer';
 import ComboList from '../features/tactics/components/ComboList';
+import ComboForm from '../features/tactics/components/ComboForm';
+
 import { type ComboData, type MarkerData, type VideoData } from '../features/tactics/types';
 import { useMapData } from '../features/tactics/hooks/useMapData';
 import { useAuth } from '../features/auth/hooks/useAuth';
-import ComboForm from '../features/tactics/components/ComboForm';
 import { db } from '../lib/firebase';
 
 export default function MapDetail() {
@@ -22,40 +24,40 @@ export default function MapDetail() {
   const { mapId, view } = useParams();
   const navigate = useNavigate();
 
-  // UTILIZANDO O NOVO HOOK GENÉRICO AQUI
   const { data: markers } = useMapData<MarkerData>('markers', mapId);
   const { data: combos } = useMapData<ComboData>('combos', mapId);
 
   const [activeSide, setActiveSide] = useState('All Sides');
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
+  const [selectedMarkerGroup, setSelectedMarkerGroup] = useState<MarkerData[] | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const [selectedCombo, setSelectedCombo] = useState<ComboData | null>(null);
 
+  const [selectedCombo, setSelectedCombo] = useState<ComboData | null>(null);
   const [isAddingTactic, setIsAddingTactic] = useState(false);
+  const [isEditingTactic, setIsEditingTactic] = useState(false);
+  const [selectedComboPos, setSelectedComboPos] = useState<{ x: number; y: number } | null>(null);
+  const [hoveredCombo, setHoveredCombo] = useState<ComboData | null>(null);
+  const [hoveredVideo, setHoveredVideo] = useState<VideoData | null>(null);
+
   const currentMap = mapsDatabase.find((m) => m.id === mapId);
+  const { role } = useAuth();
+  const canCreate = role === 'ADMIN' || role === 'CREATOR';
 
   const visibleMarkers = markers.filter((marker) => {
     if (activeSide === 'All Sides') return true;
     return marker.side === activeSide.toUpperCase();
   });
 
-  const [hoveredVideo, setHoveredVideo] = useState<VideoData | null>(null);
-  const isPanelOpen = selectedMarker !== null || isAddingTactic;
-
-  const { role } = useAuth();
-  const canCreate = role === 'ADMIN' || role === 'CREATOR';
-
-  const [isEditingTactic, setIsEditingTactic] = useState(false);
-  const [selectedComboPos, setSelectedComboPos] = useState<{ x: number; y: number } | null>(null);
-  const [hoveredCombo, setHoveredCombo] = useState<ComboData | null>(null);
-
   const combosAtPosition = selectedComboPos
     ? combos.filter((c) => c.startX === selectedComboPos.x && c.startY === selectedComboPos.y)
     : [];
 
+  const isPanelOpen = selectedMarker !== null || isAddingTactic || selectedMarkerGroup !== null;
+
   const handleClosePanel = () => {
     setSelectedMarker(null);
+    setSelectedMarkerGroup(null);
     setSelectedCombo(null);
     setSelectedComboPos(null);
     setHoveredCombo(null);
@@ -74,9 +76,15 @@ export default function MapDetail() {
     setHoveredCombo(null);
   };
 
-  const handleMarkerClick = (marker: MarkerData, e: React.MouseEvent) => {
+  const handleMarkerGroupClick = (group: MarkerData[], e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelectedMarker(marker);
+    if (group.length === 1) {
+      setSelectedMarker(group[0]);
+      setSelectedMarkerGroup(null);
+    } else {
+      setSelectedMarkerGroup(group);
+      setSelectedMarker(null);
+    }
     setSelectedVideo(null);
     setIsAddingTactic(false);
     setHoveredVideo(null);
@@ -90,6 +98,7 @@ export default function MapDetail() {
 
   const handleAddTacticClick = () => {
     setSelectedMarker(null);
+    setSelectedMarkerGroup(null);
     setSelectedVideo(null);
     setIsAddingTactic(true);
     setHoveredVideo(null);
@@ -160,7 +169,6 @@ export default function MapDetail() {
         onAddTactic={handleAddTacticClick}
         canCreate={canCreate}
       />
-
       {view === 'grenades' ? (
         <>
           <RadarCanvas
@@ -168,21 +176,29 @@ export default function MapDetail() {
             radarImage={currentMap?.radarImage}
             markers={visibleMarkers}
             selectedMarkerId={selectedMarker?.id}
+            selectedGroupPos={
+              selectedMarkerGroup
+                ? { x: Number(selectedMarkerGroup[0].x), y: Number(selectedMarkerGroup[0].y) }
+                : null
+            }
             coords={coords}
             setCoords={setCoords}
-            onMarkerClick={handleMarkerClick}
+            onMarkerGroupClick={handleMarkerGroupClick}
             onMapClick={handleClosePanel}
             hoveredVideo={hoveredVideo}
             isPanelOpen={isPanelOpen}
           />
           <TacticalPanel
             marker={selectedMarker}
+            markerGroup={selectedMarkerGroup}
             selectedVideo={selectedVideo}
             isAdding={isAddingTactic}
             isEditing={isEditingTactic}
             mapId={mapId}
             markers={markers}
             coords={coords}
+            onSelectMarker={(m) => setSelectedMarker(m)}
+            onBackToList={() => setSelectedMarker(null)}
             onSelectVideo={setSelectedVideo}
             onHoverVideo={setHoveredVideo}
             onClose={handleClosePanel}
@@ -241,7 +257,6 @@ export default function MapDetail() {
                       <span className="material-symbols-outlined p-1">close</span>
                     </button>
                   </div>
-
                   <div className="flex flex-1 flex-col overflow-y-auto p-6">
                     <div className="mb-6 flex flex-col gap-2">
                       <div className="flex items-center gap-2">
@@ -261,7 +276,6 @@ export default function MapDetail() {
                         {selectedCombo.title}
                       </h3>
                     </div>
-
                     {!selectedVideo ? (
                       <ComboDetails
                         combo={selectedCombo}
