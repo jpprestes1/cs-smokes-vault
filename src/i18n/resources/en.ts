@@ -147,6 +147,7 @@ const en = {
     coordYShort: 'Y %',
     editVideo: 'Edit Video',
     deleteVideo: 'Delete Video',
+    updatedAtLabel: 'Updated at',
     placeholders: {
       tacticTitle: 'Ex: CT Ticket Booth Smoke',
       lineupInstructions: 'Lineup instructions...',

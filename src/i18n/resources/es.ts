@@ -149,6 +149,7 @@ const es = {
     coordYShort: 'Y %',
     editVideo: 'Editar video',
     deleteVideo: 'Eliminar video',
+    updatedAtLabel: 'Actualizado el',
     placeholders: {
       tacticTitle: 'Ej: Smoke CT Ticket',
       lineupInstructions: 'Instrucciones de lineup...',
