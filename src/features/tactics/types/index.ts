@@ -8,6 +8,8 @@ export interface VideoData {
   throwY?: number; // <-- Adicionado
   author: string;
   difficulty?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MarkerData {
@@ -20,6 +22,8 @@ export interface MarkerData {
   y: string;
   desc: string;
   videos: VideoData[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TacticFormData {
@@ -55,4 +59,6 @@ export interface ComboData {
   targets: ComboTarget[]; // Lista de granadas que compõem o combo
   desc: string;
   videos: VideoData[];
+  createdAt?: string;
+  updatedAt?: string;
 }

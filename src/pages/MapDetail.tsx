@@ -143,7 +143,10 @@ export default function MapDetail() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           const updatedVideos = data.videos.filter((v: VideoData) => v.id !== videoId);
-          await updateDoc(docRef, { videos: updatedVideos });
+          await updateDoc(docRef, {
+            videos: updatedVideos,
+            updatedAt: new Date().toISOString(),
+          });
         }
       } catch (error) {
         console.error('Error deleting video:', error);
