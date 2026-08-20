@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import { type ComboTarget, type ComboData } from '../types';
+import { type ComboTarget, type ComboData, type VideoData } from '../types';
 import { formatEmbedUrl } from '../../../utils/videoFormatting';
 
 interface ComboFormProps {
@@ -52,9 +52,19 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
     setTargets(targets.filter((_, i) => i !== index));
   };
 
-  const handleTargetChange = (index: number, field: string, value: string) => {
+  const handleTargetChange = (index: number, field: 'type' | 'endX' | 'endY', value: string) => {
     const updated = [...targets];
-    updated[index] = { ...updated[index], [field]: value } as any;
+    if (field === 'type') {
+      updated[index] = {
+        ...updated[index],
+        type: value as 'SMOKE' | 'FLASH' | 'MOLOTOV',
+      };
+    } else {
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+    }
     setTargets(updated);
   };
 
@@ -76,27 +86,31 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
         endX: Number(t.endX),
         endY: Number(t.endY),
       }));
+      const now = new Date().toISOString();
 
       // MODO EDIÇÃO
       if (initialData) {
-        const updatePayload: any = {
+        const updatePayload: Record<string, unknown> = {
           title,
           side,
           startX: Number(startX),
           startY: Number(startY),
           targets: formattedTargets,
           desc,
+          updatedAt: now,
         };
 
         if (videoUrl) {
-          const newVideo = {
+          const newVideo: VideoData = {
             id: crypto.randomUUID(),
-            platform: platform as any,
+            platform: platform as VideoData['platform'],
             title,
             thumbnail: '',
             embedUrl: formatEmbedUrl(videoUrl, platform),
             author: author.replace(/^@+/, '').trim(),
             difficulty: 'MEDIUM',
+            createdAt: now,
+            updatedAt: now,
           };
           updatePayload.videos = arrayUnion(newVideo);
         }
@@ -108,14 +122,16 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
       }
 
       // MODO CRIAÇÃO
-      const newVideo = {
+      const newVideo: VideoData = {
         id: crypto.randomUUID(),
-        platform: platform as any,
+        platform: platform as VideoData['platform'],
         title,
         thumbnail: '',
         embedUrl: formatEmbedUrl(videoUrl, platform),
         author: author.replace(/^@+/, '').trim(),
         difficulty: 'MEDIUM',
+        createdAt: now,
+        updatedAt: now,
       };
 
       await addDoc(collection(db, 'combos'), {
@@ -127,6 +143,8 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
         targets: formattedTargets,
         desc,
         videos: [newVideo],
+        createdAt: now,
+        updatedAt: now,
       });
 
       showToast(t('tactics.formSuccess.comboPublished'), 'success');

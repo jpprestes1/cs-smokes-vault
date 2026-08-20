@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import { type MarkerData, type TacticFormData } from '../types';
+import { type MarkerData, type TacticFormData, type VideoData } from '../types';
 import TacticFormSelector from './TacticFormSelector';
 import TacticFormManualFields from './TacticFormManualFields';
 import TacticFormVideoFields from './TacticFormVideoFields';
@@ -71,21 +71,23 @@ export default function TacticForm({
     setIsSubmitting(true);
     try {
       const cleanAuthor = formData.author.replace(/^@+/, '').trim();
+      const now = new Date().toISOString();
 
       if (initialData) {
-        const updatePayload: any = {
+        const updatePayload: Record<string, unknown> = {
           title: formData.title,
           type: formData.type,
           side: formData.side,
           x: Number(formData.x),
           y: Number(formData.y),
           desc: formData.desc,
+          updatedAt: now,
         };
 
         if (formData.videoUrl && formData.throwX && formData.throwY) {
-          updatePayload.videos = arrayUnion({
+          const videoToAdd: VideoData = {
             id: crypto.randomUUID(),
-            platform: formData.platform as any,
+            platform: formData.platform as VideoData['platform'],
             title: formData.titleVideo || formData.title,
             thumbnail: '',
             embedUrl: formatEmbedUrl(formData.videoUrl, formData.platform),
@@ -93,7 +95,10 @@ export default function TacticForm({
             throwY: Number(formData.throwY),
             author: cleanAuthor,
             difficulty: formData.difficulty || 'MEDIUM',
-          });
+            createdAt: now,
+            updatedAt: now,
+          };
+          updatePayload.videos = arrayUnion(videoToAdd);
         }
 
         await updateDoc(doc(db, 'markers', initialData.id), updatePayload);
@@ -103,9 +108,9 @@ export default function TacticForm({
       }
 
       // MODO CRIAÇÃO ----------------------
-      const newVideo = {
+      const newVideo: VideoData = {
         id: crypto.randomUUID(),
-        platform: formData.platform as any,
+        platform: formData.platform as VideoData['platform'],
         title: formData.titleVideo || formData.title,
         thumbnail: '',
         embedUrl: formatEmbedUrl(formData.videoUrl, formData.platform),
@@ -113,11 +118,16 @@ export default function TacticForm({
         throwY: Number(formData.throwY),
         author: cleanAuthor,
         difficulty: formData.difficulty || 'MEDIUM',
+        createdAt: now,
+        updatedAt: now,
       };
 
       if (!isManualEntry) {
         // Agrupando vídeo a um marcador existente
-        await updateDoc(doc(db, 'markers', formData.markerId), { videos: arrayUnion(newVideo) });
+        await updateDoc(doc(db, 'markers', formData.markerId), {
+          videos: arrayUnion(newVideo),
+          updatedAt: now,
+        });
       } else {
         // Criando um marcador totalmente novo
         await addDoc(collection(db, 'markers'), {
@@ -129,6 +139,8 @@ export default function TacticForm({
           y: Number(formData.y),
           desc: formData.desc,
           videos: [newVideo],
+          createdAt: now,
+          updatedAt: now,
         });
       }
 

@@ -116,6 +116,8 @@ Registra posições individuais de granadas no mapa.
   - `x`: `string` (coordenada horizontal em %, de "0" a "100")
   - `y`: `string` (coordenada vertical em %, de "0" a "100")
   - `desc`: `string` (descrição tática / instruções de alinhamento)
+  - `createdAt?`: `string` (ISO 8601 timestamp da criação)
+  - `updatedAt?`: `string` (ISO 8601 timestamp da última edição)
   - `videos`: `VideoData[]`
     - `id`: `string`
     - `platform`: `'youtube' | 'tiktok' | 'instagram'`
@@ -126,6 +128,8 @@ Registra posições individuais de granadas no mapa.
     - `throwY?`: `number`
     - `author`: `string`
     - `difficulty?`: `'EASY' | 'MEDIUM' | 'HARD'`
+    - `createdAt?`: `string` (ISO 8601 timestamp)
+    - `updatedAt?`: `string` (ISO 8601 timestamp)
 
 ### 3. `combos` (Coleção)
 Registra jogadas compostas (*executes* com múltiplas granadas coordenadas).
@@ -136,11 +140,13 @@ Registra jogadas compostas (*executes* com múltiplas granadas coordenadas).
   - `side`: `'TERRORIST' | 'COUNTER-TERRORIST'`
   - `startX`: `number` (posição inicial do jogador/executante em %)
   - `startY`: `number`
-  - `targets`: `ComboTarget[]` (lista de granadas que caem nos alvos)
+  - `targets`: `ComboTarget[]` (lista de granadas que compõem o combo)
     - `type`: `'SMOKE' | 'FLASH' | 'MOLOTOV'`
     - `endX`: `number`
     - `endY`: `number`
   - `desc`: `string`
+  - `createdAt?`: `string` (ISO 8601 timestamp da criação)
+  - `updatedAt?`: `string` (ISO 8601 timestamp da última edição)
   - `videos`: `VideoData[]`
 
 ---

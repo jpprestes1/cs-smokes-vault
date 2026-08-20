@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { mapsDatabase } from '../features/maps/data/maps';
@@ -39,6 +39,32 @@ export default function MapDetail() {
   const [selectedComboPos, setSelectedComboPos] = useState<{ x: number; y: number } | null>(null);
   const [hoveredCombo, setHoveredCombo] = useState<ComboData | null>(null);
   const [hoveredVideo, setHoveredVideo] = useState<VideoData | null>(null);
+
+  useEffect(() => {
+    if (selectedMarker) {
+      const updated = markers.find((m) => m.id === selectedMarker.id);
+      if (updated) {
+        setSelectedMarker(updated);
+      }
+    }
+    if (selectedMarkerGroup) {
+      const updatedGroup = selectedMarkerGroup
+        .map((m) => markers.find((item) => item.id === m.id))
+        .filter((item): item is MarkerData => Boolean(item));
+      if (updatedGroup.length > 0) {
+        setSelectedMarkerGroup(updatedGroup);
+      }
+    }
+  }, [markers]);
+
+  useEffect(() => {
+    if (selectedCombo) {
+      const updated = combos.find((c) => c.id === selectedCombo.id);
+      if (updated) {
+        setSelectedCombo(updated);
+      }
+    }
+  }, [combos]);
 
   const currentMap = mapsDatabase.find((m) => m.id === mapId);
   const { role } = useAuth();
@@ -142,8 +168,38 @@ export default function MapDetail() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const updatedVideos = data.videos.filter((v: VideoData) => v.id !== videoId);
-          await updateDoc(docRef, { videos: updatedVideos });
+          const currentVideos: VideoData[] = data.videos || [];
+          const updatedVideos = currentVideos.filter((v: VideoData) => v.id !== videoId);
+          const updatedAt = new Date().toISOString();
+
+          await updateDoc(docRef, {
+            videos: updatedVideos,
+            updatedAt,
+          });
+
+          // Atualiza estado local imediatamente
+          if (collectionName === 'markers') {
+            setSelectedMarker((prev) =>
+              prev && prev.id === parentId
+                ? { ...prev, videos: updatedVideos, updatedAt }
+                : prev
+            );
+            setSelectedMarkerGroup((prev) =>
+              prev
+                ? prev.map((m) =>
+                    m.id === parentId ? { ...m, videos: updatedVideos, updatedAt } : m
+                  )
+                : null
+            );
+          } else {
+            setSelectedCombo((prev) =>
+              prev && prev.id === parentId
+                ? { ...prev, videos: updatedVideos, updatedAt }
+                : prev
+            );
+          }
+
+          setSelectedVideo((prev) => (prev?.id === videoId ? null : prev));
         }
       } catch (error) {
         console.error('Error deleting video:', error);
