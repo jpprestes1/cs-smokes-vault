@@ -8,7 +8,6 @@ import type {
   StratPreset,
   StratData,
 } from '../types';
-import { presetStrats } from '../data/presetStrats';
 import { mapsDatabase, type MapData } from '../../maps/data/maps';
 import { useCloudStrats } from './useCloudStrats';
 import { deleteStrat } from '../services/stratsService';
@@ -35,20 +34,10 @@ export function useTacticalBoard({
   // Modal de Salvamento
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
-  const [stratTitle, setStratTitle] = useState<string>(() => {
-    const matched = presetStrats.find((p) => p.mapId === initialMapId);
-    return matched?.title || 'MIRAGE_A_EXEC';
-  });
-
-  const [paths, setPaths] = useState<BoardPath[]>(() => {
-    const matched = presetStrats.find((p) => p.mapId === initialMapId);
-    return matched?.paths || presetStrats[0]?.paths || [];
-  });
-
-  const [entities, setEntities] = useState<BoardEntity[]>(() => {
-    const matched = presetStrats.find((p) => p.mapId === initialMapId);
-    return matched?.entities || presetStrats[0]?.entities || [];
-  });
+  // Inicializa sempre com quadro limpo e sem tática pré-carregada
+  const [stratTitle, setStratTitle] = useState<string>('UNTITLED_STRAT');
+  const [paths, setPaths] = useState<BoardPath[]>([]);
+  const [entities, setEntities] = useState<BoardEntity[]>([]);
 
   // Carrega em tempo real estratégias da nuvem (Firestore) para o mapa atual
   const { cloudStrats } = useCloudStrats(selectedMapId);
@@ -58,17 +47,9 @@ export function useTacticalBoard({
     setPrevInitialMapId(initialMapId);
     setSelectedMapId(initialMapId);
     setLoadedStratId(null);
-    const matchedPreset = presetStrats.find((p) => p.mapId === initialMapId);
-    if (matchedPreset) {
-      setStratTitle(matchedPreset.title);
-      setPaths(matchedPreset.paths);
-      setEntities(matchedPreset.entities);
-    } else {
-      const mapName = mapsDatabase.find((m) => m.id === initialMapId)?.name || initialMapId;
-      setStratTitle(`${mapName.toUpperCase()}_STRAT`);
-      setPaths([]);
-      setEntities([]);
-    }
+    setStratTitle('UNTITLED_STRAT');
+    setPaths([]);
+    setEntities([]);
   }
 
   // Pilha de Histórico
@@ -140,6 +121,7 @@ export function useTacticalBoard({
     setPaths([]);
     setEntities([]);
     setLoadedStratId(null);
+    setStratTitle('UNTITLED_STRAT');
     showToast(t('tacticalBoard.boardCleared', 'Quadro limpo!'));
   };
 
@@ -147,23 +129,15 @@ export function useTacticalBoard({
   const handleSelectMap = (mapId: string) => {
     setSelectedMapId(mapId);
     setLoadedStratId(null);
-    const matchedPreset = presetStrats.find((p) => p.mapId === mapId);
-    if (matchedPreset) {
-      setStratTitle(matchedPreset.title);
-      setPaths(matchedPreset.paths);
-      setEntities(matchedPreset.entities);
-    } else {
-      const mapName = mapsDatabase.find((m) => m.id === mapId)?.name || mapId;
-      setStratTitle(`${mapName.toUpperCase()}_STRAT`);
-      setPaths([]);
-      setEntities([]);
-    }
+    setStratTitle('UNTITLED_STRAT');
+    setPaths([]);
+    setEntities([]);
     if (onMapChange) {
       onMapChange(mapId);
     }
   };
 
-  // Carregar Preset Local do Sistema
+  // Carregar Preset
   const handleSelectPreset = (preset: StratPreset) => {
     pushHistory();
     setSelectedMapId(preset.mapId);
@@ -174,7 +148,7 @@ export function useTacticalBoard({
     if (onMapChange) {
       onMapChange(preset.mapId);
     }
-    showToast(t('tacticalBoard.presetLoaded', `Preset "${preset.title}" carregado!`));
+    showToast(t('tacticalBoard.presetLoaded', { title: preset.title }));
   };
 
   // Carregar Estratégia Salva no Firestore
@@ -188,7 +162,7 @@ export function useTacticalBoard({
     if (onMapChange && strat.mapId !== selectedMapId) {
       onMapChange(strat.mapId);
     }
-    showToast(t('tacticalBoard.stratLoaded', `Estratégia "${strat.title}" carregada da nuvem!`));
+    showToast(t('tacticalBoard.stratLoaded', { title: strat.title }));
   };
 
   // Excluir Estratégia do Firestore
@@ -197,6 +171,9 @@ export function useTacticalBoard({
       await deleteStrat(stratId);
       if (loadedStratId === stratId) {
         setLoadedStratId(null);
+        setStratTitle('UNTITLED_STRAT');
+        setPaths([]);
+        setEntities([]);
       }
       showToast(t('tacticalBoard.stratDeleted', 'Estratégia excluída com sucesso!'));
     } catch (err) {

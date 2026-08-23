@@ -29,7 +29,7 @@ export default function MapSideNav({
   };
 
   return (
-    <aside className="bg-surface-container-low/90 text-primary font-data-label text-data-label relative z-30 hidden w-64 flex-col border-r border-white/5 py-6 backdrop-blur-xl md:flex">
+    <aside className="bg-surface-container-low/90 text-primary font-data-label text-data-label relative z-30 hidden w-90 flex-col border-r border-white/5 py-6 backdrop-blur-xl md:flex">
       <div className="mb-6 flex flex-col gap-1 px-6">
         <button
           onClick={onBack}

@@ -53,7 +53,7 @@ export default function Navbar() {
           {/* Links Desktop */}
           <div className="hidden gap-6 md:flex">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = location.pathname.includes(item.path);
               return (
                 <Link
                   key={item.key}

@@ -39,11 +39,7 @@ export default function TacticalBoardToolbar({
 
   const handleDelete = (e: React.MouseEvent, stratId: string, title: string) => {
     e.stopPropagation();
-    if (
-      window.confirm(
-        t('tacticalBoard.deleteConfirm', `Deseja realmente excluir a estratégia "${title}"?`)
-      )
-    ) {
+    if (window.confirm(t('tacticalBoard.deleteConfirm', { title }))) {
       if (onDeleteCloudStrat) {
         onDeleteCloudStrat(stratId);
       }
@@ -151,25 +147,31 @@ export default function TacticalBoardToolbar({
               ))
             )}
 
-            {/* Seção Presets do Sistema */}
-            <div className="font-data-label text-outline-variant mt-2 border-t border-b border-white/5 px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase">
-              {t('tacticalBoard.systemPresets', 'Presets do Sistema')}
-            </div>
-            {presetStrats.map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => {
-                  onSelectPreset(preset);
-                  setIsPresetsOpen(false);
-                }}
-                className="hover:bg-primary/10 hover:text-primary text-on-surface flex w-full flex-col px-3 py-2 text-left transition-colors"
-              >
-                <span className="font-data-label text-xs font-bold uppercase">{preset.title}</span>
-                <span className="text-on-surface-variant line-clamp-1 text-[11px]">
-                  {preset.description}
-                </span>
-              </button>
-            ))}
+            {/* Seção Presets do Sistema (se houver) */}
+            {presetStrats.length > 0 && (
+              <>
+                <div className="font-data-label text-outline-variant mt-2 border-t border-b border-white/5 px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase">
+                  {t('tacticalBoard.systemPresets', 'Presets do Sistema')}
+                </div>
+                {presetStrats.map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => {
+                      onSelectPreset(preset);
+                      setIsPresetsOpen(false);
+                    }}
+                    className="hover:bg-primary/10 hover:text-primary text-on-surface flex w-full flex-col px-3 py-2 text-left transition-colors"
+                  >
+                    <span className="font-data-label text-xs font-bold uppercase">
+                      {preset.title}
+                    </span>
+                    <span className="text-on-surface-variant line-clamp-1 text-[11px]">
+                      {preset.description}
+                    </span>
+                  </button>
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>
