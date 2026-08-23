@@ -29,7 +29,7 @@ export default function MapSideNav({
   };
 
   return (
-    <aside className="bg-surface-container-low/90 text-primary font-data-label text-data-label relative z-30 hidden w-64 flex-col border-r border-white/5 py-6 backdrop-blur-xl md:flex">
+    <aside className="bg-surface-container-low/90 text-primary font-data-label text-data-label relative z-30 hidden w-90 flex-col border-r border-white/5 py-6 backdrop-blur-xl md:flex">
       <div className="mb-6 flex flex-col gap-1 px-6">
         <button
           onClick={onBack}
@@ -39,7 +39,7 @@ export default function MapSideNav({
         </button>
 
         {/* TABS: Grenades vs Combos */}
-        <div className="bg-surface-container-highest mb-6 flex w-full rounded p-1">
+        <div className="bg-surface-container-highest mb-2 flex w-full rounded p-1">
           <Link
             to={`/maps/${mapId}/grenades`}
             className={`flex-1 rounded py-2 text-center transition-colors ${
@@ -61,6 +61,14 @@ export default function MapSideNav({
             {t('maps.combos')}
           </Link>
         </div>
+
+        <Link
+          to={`/strat-board/${mapId}`}
+          className="border-primary/20 bg-primary/5 hover:bg-primary/15 text-primary mb-6 flex w-full items-center justify-center gap-1.5 rounded border py-1.5 text-xs font-bold transition-all active:scale-95"
+        >
+          <span className="material-symbols-outlined text-sm">draw</span>
+          {t('tacticalBoard.openInBoard', 'Abrir no Strat Board')}
+        </Link>
 
         <div className="bg-surface-variant mb-2 flex h-10 w-10 items-center justify-center rounded">
           <span

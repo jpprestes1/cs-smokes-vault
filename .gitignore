@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .env
 *.exe
+
+firestore.rules
+.firebaserc

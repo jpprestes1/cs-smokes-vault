@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -9,6 +9,7 @@ import AdminRoute from './features/auth/components/AdminRoutes';
 const Home = lazy(() => import('./pages/Home'));
 const MapsView = lazy(() => import('./pages/MapsView'));
 const MapDetail = lazy(() => import('./pages/MapDetail'));
+const TacticsBoard = lazy(() => import('./pages/TacticsBoard'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -40,7 +41,12 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/maps" element={<MapsView />} />
             <Route path="/maps/:mapId/:view?" element={<MapDetail />} />
-            <Route path="/tactics" element={<ComingSoon />} />
+            <Route path="/strat-board" element={<TacticsBoard />} />
+            <Route path="/strat-board/:mapId" element={<TacticsBoard />} />
+            <Route path="/tactics" element={<Navigate to="/strat-board" replace />} />
+            <Route path="/tactics/:mapId" element={<Navigate to="/strat-board" replace />} />
+            <Route path="/tactical-board" element={<Navigate to="/strat-board" replace />} />
+            <Route path="/tactical-board/:mapId" element={<Navigate to="/strat-board" replace />} />
             <Route path="/pro-strats" element={<ComingSoon />} />
             <Route path="/training" element={<ComingSoon />} />
             <Route path="/login" element={<Login />} />

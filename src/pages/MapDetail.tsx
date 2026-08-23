@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { mapsDatabase } from '../features/maps/data/maps';
-import { doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
 
 import MapSideNav from '../features/maps/components/MapSideNav';
 import RadarCanvas from '../features/tactics/components/RadarCanvas';
@@ -17,7 +16,8 @@ import ComboForm from '../features/tactics/components/ComboForm';
 import { type ComboData, type MarkerData, type VideoData } from '../features/tactics/types';
 import { useMapData } from '../features/tactics/hooks/useMapData';
 import { useAuth } from '../features/auth/hooks/useAuth';
-import { db } from '../lib/firebase';
+import { deleteMarker, deleteVideoFromMarker } from '../features/tactics/services/markersService';
+import { deleteCombo, deleteVideoFromCombo } from '../features/tactics/services/combosService';
 
 export default function MapDetail() {
   const { t } = useTranslation();
@@ -28,43 +28,31 @@ export default function MapDetail() {
   const { data: combos, isLoading: isCombosLoading } = useMapData<ComboData>('combos', mapId);
 
   const [activeSide, setActiveSide] = useState('All Sides');
-  const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
-  const [selectedMarkerGroup, setSelectedMarkerGroup] = useState<MarkerData[] | null>(null);
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
+  const [selectedMarkerGroupIds, setSelectedMarkerGroupIds] = useState<string[] | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
 
-  const [selectedCombo, setSelectedCombo] = useState<ComboData | null>(null);
+  const [selectedComboId, setSelectedComboId] = useState<string | null>(null);
   const [isAddingTactic, setIsAddingTactic] = useState(false);
   const [isEditingTactic, setIsEditingTactic] = useState(false);
   const [selectedComboPos, setSelectedComboPos] = useState<{ x: number; y: number } | null>(null);
   const [hoveredCombo, setHoveredCombo] = useState<ComboData | null>(null);
   const [hoveredVideo, setHoveredVideo] = useState<VideoData | null>(null);
 
-  useEffect(() => {
-    if (selectedMarker) {
-      const updated = markers.find((m) => m.id === selectedMarker.id);
-      if (updated) {
-        setSelectedMarker(updated);
-      }
-    }
-    if (selectedMarkerGroup) {
-      const updatedGroup = selectedMarkerGroup
-        .map((m) => markers.find((item) => item.id === m.id))
-        .filter((item): item is MarkerData => Boolean(item));
-      if (updatedGroup.length > 0) {
-        setSelectedMarkerGroup(updatedGroup);
-      }
-    }
-  }, [markers]);
+  const selectedMarker = selectedMarkerId
+    ? markers.find((m) => m.id === selectedMarkerId) || null
+    : null;
 
-  useEffect(() => {
-    if (selectedCombo) {
-      const updated = combos.find((c) => c.id === selectedCombo.id);
-      if (updated) {
-        setSelectedCombo(updated);
-      }
-    }
-  }, [combos]);
+  const selectedMarkerGroup = selectedMarkerGroupIds
+    ? selectedMarkerGroupIds
+        .map((id) => markers.find((m) => m.id === id))
+        .filter((m): m is MarkerData => Boolean(m))
+    : null;
+
+  const selectedCombo = selectedComboId
+    ? combos.find((c) => c.id === selectedComboId) || null
+    : null;
 
   const currentMap = mapsDatabase.find((m) => m.id === mapId);
   const { role } = useAuth();
@@ -91,9 +79,9 @@ export default function MapDetail() {
   const isPanelOpen = selectedMarker !== null || isAddingTactic || selectedMarkerGroup !== null;
 
   const handleClosePanel = () => {
-    setSelectedMarker(null);
-    setSelectedMarkerGroup(null);
-    setSelectedCombo(null);
+    setSelectedMarkerId(null);
+    setSelectedMarkerGroupIds(null);
+    setSelectedComboId(null);
     setSelectedComboPos(null);
     setHoveredCombo(null);
     setSelectedVideo(null);
@@ -109,9 +97,9 @@ export default function MapDetail() {
     );
     setSelectedComboPos(pos);
     if (atPos.length === 1) {
-      setSelectedCombo(atPos[0]);
+      setSelectedComboId(atPos[0].id);
     } else {
-      setSelectedCombo(null);
+      setSelectedComboId(null);
     }
     setIsAddingTactic(false);
     setIsEditingTactic(false);
@@ -121,11 +109,11 @@ export default function MapDetail() {
   const handleMarkerGroupClick = (group: MarkerData[], e: React.MouseEvent) => {
     e.stopPropagation();
     if (group.length === 1) {
-      setSelectedMarker(group[0]);
-      setSelectedMarkerGroup(null);
+      setSelectedMarkerId(group[0].id);
+      setSelectedMarkerGroupIds(null);
     } else {
-      setSelectedMarkerGroup(group);
-      setSelectedMarker(null);
+      setSelectedMarkerGroupIds(group.map((m) => m.id));
+      setSelectedMarkerId(null);
     }
     setSelectedVideo(null);
     setIsAddingTactic(false);
@@ -139,8 +127,8 @@ export default function MapDetail() {
   };
 
   const handleAddTacticClick = () => {
-    setSelectedMarker(null);
-    setSelectedMarkerGroup(null);
+    setSelectedMarkerId(null);
+    setSelectedMarkerGroupIds(null);
     setSelectedVideo(null);
     setIsAddingTactic(true);
     setHoveredVideo(null);
@@ -152,7 +140,11 @@ export default function MapDetail() {
         collectionName === 'markers' ? t('maps.deleteTacticConfirm') : t('maps.deleteComboConfirm')
       )
     ) {
-      await deleteDoc(doc(db, collectionName, id));
+      if (collectionName === 'markers') {
+        await deleteMarker(id);
+      } else {
+        await deleteCombo(id);
+      }
       handleClosePanel();
     }
   };
@@ -164,39 +156,12 @@ export default function MapDetail() {
   ) => {
     if (window.confirm(t('maps.deleteVideoConfirm'))) {
       try {
-        const docRef = doc(db, collectionName, parentId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          const currentVideos: VideoData[] = data.videos || [];
-          const updatedVideos = currentVideos.filter((v: VideoData) => v.id !== videoId);
-          const updatedAt = new Date().toISOString();
-
-          await updateDoc(docRef, {
-            videos: updatedVideos,
-            updatedAt,
-          });
-
-          // Atualiza estado local imediatamente
-          if (collectionName === 'markers') {
-            setSelectedMarker((prev) =>
-              prev && prev.id === parentId ? { ...prev, videos: updatedVideos, updatedAt } : prev
-            );
-            setSelectedMarkerGroup((prev) =>
-              prev
-                ? prev.map((m) =>
-                    m.id === parentId ? { ...m, videos: updatedVideos, updatedAt } : m
-                  )
-                : null
-            );
-          } else {
-            setSelectedCombo((prev) =>
-              prev && prev.id === parentId ? { ...prev, videos: updatedVideos, updatedAt } : prev
-            );
-          }
-
-          setSelectedVideo((prev) => (prev?.id === videoId ? null : prev));
+        if (collectionName === 'markers') {
+          await deleteVideoFromMarker(parentId, videoId);
+        } else {
+          await deleteVideoFromCombo(parentId, videoId);
         }
+        setSelectedVideo((prev) => (prev?.id === videoId ? null : prev));
       } catch (error) {
         console.error('Error deleting video:', error);
       }
@@ -266,8 +231,8 @@ export default function MapDetail() {
             mapId={mapId}
             markers={markers}
             coords={coords}
-            onSelectMarker={(m) => setSelectedMarker(m)}
-            onBackToList={() => setSelectedMarker(null)}
+            onSelectMarker={(m) => setSelectedMarkerId(m.id)}
+            onBackToList={() => setSelectedMarkerId(null)}
             onSelectVideo={setSelectedVideo}
             onHoverVideo={setHoveredVideo}
             onClose={handleClosePanel}
@@ -307,7 +272,7 @@ export default function MapDetail() {
                     {combosAtPosition.length > 1 ? (
                       <button
                         onClick={() => {
-                          setSelectedCombo(null);
+                          setSelectedComboId(null);
                           setSelectedVideo(null);
                         }}
                         className="text-on-surface-variant hover:text-primary flex items-center gap-1 text-xs font-bold transition-colors"
@@ -368,7 +333,7 @@ export default function MapDetail() {
               ) : selectedComboPos ? (
                 <ComboList
                   combos={combosAtPosition}
-                  onSelectCombo={setSelectedCombo}
+                  onSelectCombo={(c) => setSelectedComboId(c.id)}
                   onHoverCombo={setHoveredCombo}
                   onClose={handleClosePanel}
                 />

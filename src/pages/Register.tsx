@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useTranslation } from 'react-i18next';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { auth } from '../lib/firebase';
+import { createUserProfile } from '../features/auth/services/usersService';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Register() {
@@ -34,15 +34,16 @@ export default function Register() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        email: userCredential.user.email,
-        role: 'PLAYER', // Cargo padrão
-        createdAt: new Date().toISOString(),
-      });
+      await createUserProfile(
+        userCredential.user.uid,
+        userCredential.user.email || email,
+        'PLAYER'
+      );
 
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || t('auth.createAccountFailed'));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : t('auth.createAccountFailed');
+      setError(errorMessage || t('auth.createAccountFailed'));
       console.error(err);
     } finally {
       setIsLoading(false);

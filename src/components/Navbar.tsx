@@ -13,7 +13,7 @@ export default function Navbar() {
   const { user, loading, role } = useAuth();
   const navItems = [
     { key: 'nav.maps', path: '/maps' },
-    { key: 'nav.tactics', path: '/tactics' },
+    { key: 'nav.tactics', path: '/strat-board' },
     { key: 'nav.proStrats', path: '/pro-strats' },
     { key: 'nav.training', path: '/training' },
   ];
@@ -53,7 +53,7 @@ export default function Navbar() {
           {/* Links Desktop */}
           <div className="hidden gap-6 md:flex">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = location.pathname.includes(item.path);
               return (
                 <Link
                   key={item.key}

@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import { type UserRole } from '../features/auth/hooks/useAuth';
-
-interface UserProfile {
-  id: string;
-  email: string;
-  role: UserRole;
-}
+import {
+  type UserProfile,
+  getAllUsers,
+  updateUserRole,
+} from '../features/auth/services/usersService';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
@@ -18,11 +15,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'users'));
-        const usersList: UserProfile[] = [];
-        querySnapshot.forEach((doc) => {
-          usersList.push({ id: doc.id, ...doc.data() } as UserProfile);
-        });
+        const usersList = await getAllUsers();
         setUsers(usersList);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -36,8 +29,7 @@ export default function AdminDashboard() {
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, { role: newRole });
+      await updateUserRole(userId, newRole);
 
       // Atualiza o estado local para refletir a mudança instantaneamente
       setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
