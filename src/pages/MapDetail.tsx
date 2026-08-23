@@ -24,8 +24,8 @@ export default function MapDetail() {
   const { mapId, view } = useParams();
   const navigate = useNavigate();
 
-  const { data: markers } = useMapData<MarkerData>('markers', mapId);
-  const { data: combos } = useMapData<ComboData>('combos', mapId);
+  const { data: markers, isLoading: isMarkersLoading } = useMapData<MarkerData>('markers', mapId);
+  const { data: combos, isLoading: isCombosLoading } = useMapData<ComboData>('combos', mapId);
 
   const [activeSide, setActiveSide] = useState('All Sides');
   const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
@@ -180,9 +180,7 @@ export default function MapDetail() {
           // Atualiza estado local imediatamente
           if (collectionName === 'markers') {
             setSelectedMarker((prev) =>
-              prev && prev.id === parentId
-                ? { ...prev, videos: updatedVideos, updatedAt }
-                : prev
+              prev && prev.id === parentId ? { ...prev, videos: updatedVideos, updatedAt } : prev
             );
             setSelectedMarkerGroup((prev) =>
               prev
@@ -193,9 +191,7 @@ export default function MapDetail() {
             );
           } else {
             setSelectedCombo((prev) =>
-              prev && prev.id === parentId
-                ? { ...prev, videos: updatedVideos, updatedAt }
-                : prev
+              prev && prev.id === parentId ? { ...prev, videos: updatedVideos, updatedAt } : prev
             );
           }
 
@@ -259,6 +255,7 @@ export default function MapDetail() {
             onMapClick={handleClosePanel}
             hoveredVideo={hoveredVideo}
             isPanelOpen={isPanelOpen}
+            isLoading={isMarkersLoading}
           />
           <TacticalPanel
             marker={selectedMarker}
@@ -293,6 +290,7 @@ export default function MapDetail() {
             onPositionClick={handlePositionClick}
             onMapClick={handleClosePanel}
             isPanelOpen={isAddingTactic || selectedComboPos !== null}
+            isLoading={isCombosLoading}
           />
           {(isAddingTactic || selectedComboPos !== null || isEditingTactic) && (
             <aside className="bg-surface-container/95 fixed top-16 right-0 z-40 flex h-[calc(100vh-64px)] w-full transform flex-col border-l border-white/10 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-transform duration-300 ease-out md:w-[450px]">

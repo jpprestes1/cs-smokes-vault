@@ -16,6 +16,7 @@ interface RadarCanvasProps {
   onMapClick: () => void;
   hoveredVideo?: VideoData | null;
   isPanelOpen?: boolean;
+  isLoading?: boolean;
 }
 
 const formatCoord = (coord: string | number) => {
@@ -35,6 +36,7 @@ export default function RadarCanvas({
   onMapClick,
   hoveredVideo,
   isPanelOpen,
+  isLoading,
 }: RadarCanvasProps) {
   const { t } = useTranslation();
   const {
@@ -71,8 +73,16 @@ export default function RadarCanvas({
     >
       <div className="radar-grid pointer-events-none absolute inset-0 opacity-30"></div>
       <div className="pointer-events-none absolute top-6 left-6 z-20 flex flex-col gap-2">
-        <div className="bg-surface-container/90 text-primary font-data-label text-data-label rounded-sm border border-white/10 px-3 py-1 uppercase backdrop-blur">
-          {t('tactics.mapLabel')} // {mapId?.toUpperCase()}
+        <div className="flex items-center gap-2">
+          <div className="bg-surface-container/90 text-primary font-data-label text-data-label rounded-sm border border-white/10 px-3 py-1 uppercase backdrop-blur">
+            {t('tactics.mapLabel')} // {mapId?.toUpperCase()}
+          </div>
+          {isLoading && (
+            <div className="tactical-shimmer bg-surface-container/90 border-primary-container/30 text-primary-container font-data-label text-data-label flex items-center gap-1.5 rounded-sm border px-2.5 py-1 tracking-wider uppercase backdrop-blur">
+              <span className="bg-primary-container h-1.5 w-1.5 animate-ping rounded-full" />
+              <span>{t('tactics.scanningTacticalData')}</span>
+            </div>
+          )}
         </div>
         <div className="font-data-label text-on-surface-variant text-xs">
           {t('tactics.coordLabel')}:{' '}

@@ -70,7 +70,8 @@ export default function TacticVideoPlayer({ video, onBack }: TacticVideoPlayerPr
 
         {video.author && (
           <span className="font-data-label text-on-surface-variant text-xs">
-            {t('common.by')} <strong className="text-on-surface font-semibold">{video.author}</strong>
+            {t('common.by')}{' '}
+            <strong className="text-on-surface font-semibold">{video.author}</strong>
           </span>
         )}
       </div>

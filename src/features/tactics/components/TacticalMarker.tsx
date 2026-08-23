@@ -52,7 +52,7 @@ export default function TacticalMarker({
   const isMixed = side === 'MIXED';
   const icon = getIcon(type);
 
-  const baseScale = zoom/1.3 * (isSelected ? 1.15 : isHovered ? 1.1 : 1);
+  const baseScale = (zoom / 1.3) * (isSelected ? 1.15 : isHovered ? 1.1 : 1);
 
   // Variante: Fantasma de Lançamento (Pulsante e Transparente)
   if (variant === 'ghost') {
@@ -98,7 +98,8 @@ export default function TacticalMarker({
   // Variante Padrão: Botão Interativo (Granadas no Radar e Início de Combos)
   const shapeClass = type === 'COMBO' ? 'rounded h-6 w-6' : 'rounded-full h-7 w-7';
   // A div interna deve ter exatamente o mesmo formato que a externa para não "vazar" nos cantos
-  const innerShapeClass = type === 'COMBO' ? 'rounded-[2px] h-full w-full' : 'rounded-full h-full w-full';
+  const innerShapeClass =
+    type === 'COMBO' ? 'rounded-[2px] h-full w-full' : 'rounded-full h-full w-full';
   const iconSize = '!text-[18px]';
   const countSize = '!text-[11px]';
 
