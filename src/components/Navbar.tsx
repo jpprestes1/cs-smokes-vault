@@ -13,7 +13,7 @@ export default function Navbar() {
   const { user, loading, role } = useAuth();
   const navItems = [
     { key: 'nav.maps', path: '/maps' },
-    { key: 'nav.tactics', path: '/tactics' },
+    { key: 'nav.tactics', path: '/strat-board' },
     { key: 'nav.proStrats', path: '/pro-strats' },
     { key: 'nav.training', path: '/training' },
   ];

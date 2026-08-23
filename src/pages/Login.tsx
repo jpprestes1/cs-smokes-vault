@@ -20,7 +20,7 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/'); // Redireciona para a home após o login
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(t('auth.invalidCredentials'));
       console.error(err);
     } finally {

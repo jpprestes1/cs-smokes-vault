@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
-import { type ComboTarget, type ComboData, type VideoData } from '../types';
-import { formatEmbedUrl } from '../../../utils/videoFormatting';
+import { type ComboTarget, type ComboData, type PlatformType, type GrenadeType } from '../types';
+import { createCombo, updateCombo, addVideoToCombo } from '../services/combosService';
 
 interface ComboFormProps {
   mapId?: string;
@@ -24,18 +22,16 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
   const [startY, setStartY] = useState(initialData?.startY.toString() || '');
 
   // Carrega os alvos existentes na edição ou inicia vazio na criação
-  const [targets, setTargets] = useState<
-    Array<{ type: 'SMOKE' | 'FLASH' | 'MOLOTOV'; endX: string; endY: string }>
-  >(
-    initialData?.targets.map((t) => ({
-      type: t.type,
-      endX: t.endX.toString(),
-      endY: t.endY.toString(),
+  const [targets, setTargets] = useState<Array<{ type: GrenadeType; endX: string; endY: string }>>(
+    initialData?.targets.map((tgt) => ({
+      type: tgt.type,
+      endX: tgt.endX.toString(),
+      endY: tgt.endY.toString(),
     })) || []
   );
 
   const [videoUrl, setVideoUrl] = useState('');
-  const [platform, setPlatform] = useState('youtube');
+  const [platform, setPlatform] = useState<PlatformType>('youtube');
   const [author, setAuthor] = useState('');
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -57,7 +53,7 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
     if (field === 'type') {
       updated[index] = {
         ...updated[index],
-        type: value as 'SMOKE' | 'FLASH' | 'MOLOTOV',
+        type: value as GrenadeType,
       };
     } else {
       updated[index] = {
@@ -81,76 +77,60 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
 
     setIsSubmitting(true);
     try {
-      const formattedTargets: ComboTarget[] = targets.map((t) => ({
-        type: t.type,
-        endX: Number(t.endX),
-        endY: Number(t.endY),
+      const formattedTargets: ComboTarget[] = targets.map((tgt) => ({
+        type: tgt.type,
+        endX: Number(tgt.endX),
+        endY: Number(tgt.endY),
       }));
-      const now = new Date().toISOString();
 
       // MODO EDIÇÃO
       if (initialData) {
-        const updatePayload: Record<string, unknown> = {
+        await updateCombo(initialData.id, {
           title,
           side,
           startX: Number(startX),
           startY: Number(startY),
           targets: formattedTargets,
           desc,
-          updatedAt: now,
-        };
+        });
 
         if (videoUrl) {
-          const newVideo: VideoData = {
-            id: crypto.randomUUID(),
-            platform: platform as VideoData['platform'],
+          await addVideoToCombo(initialData.id, {
+            platform,
             title,
-            thumbnail: '',
-            embedUrl: formatEmbedUrl(videoUrl, platform),
-            author: author.replace(/^@+/, '').trim(),
+            videoUrl,
+            author,
             difficulty: 'MEDIUM',
-            createdAt: now,
-            updatedAt: now,
-          };
-          updatePayload.videos = arrayUnion(newVideo);
+          });
         }
 
-        await updateDoc(doc(db, 'combos', initialData.id), updatePayload);
         showToast(t('tactics.formSuccess.comboUpdated'), 'success');
         setTimeout(() => onClose(), 1500);
         return;
       }
 
       // MODO CRIAÇÃO
-      const newVideo: VideoData = {
-        id: crypto.randomUUID(),
-        platform: platform as VideoData['platform'],
-        title,
-        thumbnail: '',
-        embedUrl: formatEmbedUrl(videoUrl, platform),
-        author: author.replace(/^@+/, '').trim(),
-        difficulty: 'MEDIUM',
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      await addDoc(collection(db, 'combos'), {
-        mapId,
+      await createCombo({
+        mapId: mapId || '',
         title,
         side,
         startX: Number(startX),
         startY: Number(startY),
         targets: formattedTargets,
         desc,
-        videos: [newVideo],
-        createdAt: now,
-        updatedAt: now,
+        initialVideo: {
+          platform,
+          title,
+          videoUrl,
+          author,
+          difficulty: 'MEDIUM',
+        },
       });
 
       showToast(t('tactics.formSuccess.comboPublished'), 'success');
       setTimeout(() => onClose(), 1500);
     } catch (error) {
-      console.error(error);
+      console.error('Erro ao salvar combo:', error);
       showToast(t('tactics.formErrors.saveDb'), 'error');
     } finally {
       setIsSubmitting(false);
@@ -259,7 +239,7 @@ export default function ComboForm({ mapId, onClose, initialData }: ComboFormProp
           <div className="mb-4 flex gap-2">
             <select
               value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
+              onChange={(e) => setPlatform(e.target.value as PlatformType)}
               className="bg-surface-variant/20 text-on-surface focus:border-primary w-1/3 rounded border border-white/10 p-2 text-sm transition-colors outline-none"
             >
               <option value="youtube">YouTube</option>

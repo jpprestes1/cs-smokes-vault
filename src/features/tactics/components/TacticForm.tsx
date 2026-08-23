@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { collection, addDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
-import { type MarkerData, type TacticFormData, type VideoData } from '../types';
+import {
+  type MarkerData,
+  type TacticFormData,
+  type GrenadeType,
+  type PlatformType,
+  type DifficultyType,
+} from '../types';
+import { createMarker, updateMarker, addVideoToMarker } from '../services/markersService';
 import TacticFormSelector from './TacticFormSelector';
 import TacticFormManualFields from './TacticFormManualFields';
 import TacticFormVideoFields from './TacticFormVideoFields';
-import { formatEmbedUrl } from '../../../utils/videoFormatting';
 
 interface TacticFormProps {
   mapId?: string;
@@ -70,77 +74,64 @@ export default function TacticForm({
 
     setIsSubmitting(true);
     try {
-      const cleanAuthor = formData.author.replace(/^@+/, '').trim();
-      const now = new Date().toISOString();
-
       if (initialData) {
-        const updatePayload: Record<string, unknown> = {
+        await updateMarker(initialData.id, {
           title: formData.title,
-          type: formData.type,
+          type: formData.type as GrenadeType,
           side: formData.side,
           x: Number(formData.x),
           y: Number(formData.y),
           desc: formData.desc,
-          updatedAt: now,
-        };
+        });
 
         if (formData.videoUrl && formData.throwX && formData.throwY) {
-          const videoToAdd: VideoData = {
-            id: crypto.randomUUID(),
-            platform: formData.platform as VideoData['platform'],
+          await addVideoToMarker(initialData.id, {
+            platform: formData.platform as PlatformType,
             title: formData.titleVideo || formData.title,
-            thumbnail: '',
-            embedUrl: formatEmbedUrl(formData.videoUrl, formData.platform),
+            videoUrl: formData.videoUrl,
             throwX: Number(formData.throwX),
             throwY: Number(formData.throwY),
-            author: cleanAuthor,
-            difficulty: formData.difficulty || 'MEDIUM',
-            createdAt: now,
-            updatedAt: now,
-          };
-          updatePayload.videos = arrayUnion(videoToAdd);
+            author: formData.author,
+            difficulty: formData.difficulty as DifficultyType,
+          });
         }
 
-        await updateDoc(doc(db, 'markers', initialData.id), updatePayload);
         showToast(t('tactics.formSuccess.tacticUpdated'), 'success');
         setTimeout(() => onClose(), 1500);
         return;
       }
 
       // MODO CRIAÇÃO ----------------------
-      const newVideo: VideoData = {
-        id: crypto.randomUUID(),
-        platform: formData.platform as VideoData['platform'],
-        title: formData.titleVideo || formData.title,
-        thumbnail: '',
-        embedUrl: formatEmbedUrl(formData.videoUrl, formData.platform),
-        throwX: Number(formData.throwX),
-        throwY: Number(formData.throwY),
-        author: cleanAuthor,
-        difficulty: formData.difficulty || 'MEDIUM',
-        createdAt: now,
-        updatedAt: now,
-      };
-
       if (!isManualEntry) {
         // Agrupando vídeo a um marcador existente
-        await updateDoc(doc(db, 'markers', formData.markerId), {
-          videos: arrayUnion(newVideo),
-          updatedAt: now,
+        await addVideoToMarker(formData.markerId, {
+          platform: formData.platform as PlatformType,
+          title: formData.titleVideo || formData.title,
+          videoUrl: formData.videoUrl,
+          throwX: Number(formData.throwX),
+          throwY: Number(formData.throwY),
+          author: formData.author,
+          difficulty: formData.difficulty as DifficultyType,
         });
       } else {
-        // Criando um marcador totalmente novo
-        await addDoc(collection(db, 'markers'), {
-          mapId: mapId,
+        // Criando um marcador totalmente novo com vídeo inicial
+        await createMarker({
+          mapId: mapId || '',
           title: formData.title,
-          type: formData.type,
+          type: formData.type as GrenadeType,
           side: formData.side,
           x: Number(formData.x),
           y: Number(formData.y),
           desc: formData.desc,
-          videos: [newVideo],
-          createdAt: now,
-          updatedAt: now,
+          initialVideo: {
+            platform: formData.platform as PlatformType,
+            title: formData.titleVideo || formData.title,
+            videoUrl: formData.videoUrl,
+            throwX: Number(formData.throwX),
+            throwY: Number(formData.throwY),
+            author: formData.author,
+            difficulty: formData.difficulty as DifficultyType,
+          },
         });
       }
 
@@ -148,7 +139,7 @@ export default function TacticForm({
       setTimeout(() => onClose(), 1500);
     } catch (error) {
       showToast(t('tactics.formErrors.saveDb'), 'error');
-      console.error(error);
+      console.error('Erro ao salvar tática:', error);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../../lib/firebase';
+import { auth } from '../../../lib/firebase';
+import { getUserProfile } from '../services/usersService';
 
 export type UserRole = 'ADMIN' | 'CREATOR' | 'PLAYER' | null;
 
@@ -16,9 +16,9 @@ export function useAuth() {
 
       if (currentUser) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-          if (userDoc.exists()) {
-            setRole(userDoc.data().role as UserRole);
+          const profile = await getUserProfile(currentUser.uid);
+          if (profile) {
+            setRole(profile.role);
           } else {
             setRole('PLAYER');
           }
