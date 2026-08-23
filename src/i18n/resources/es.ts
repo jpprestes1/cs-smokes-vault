@@ -114,6 +114,7 @@ const es = {
     executesLabel: 'EXECUTES',
     mapLabel: 'MAPA',
     coordLabel: 'COORD',
+    scanningTacticalData: 'SINCRONIZANDO DATOS TACTICOS...',
     executionGuides: 'GUIAS DE EJECUCION',
     availableGuides: 'GUIAS DISPONIBLES',
     editCombo: 'EDITAR COMBO',

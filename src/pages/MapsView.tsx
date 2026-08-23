@@ -1,13 +1,12 @@
 import MapCard from '../features/maps/components/MapCard';
+import MapCardSkeleton from '../features/maps/components/MapCardSkeleton';
 import { useTranslation } from 'react-i18next';
 import { mapsDatabase } from '../features/maps/data/maps';
-import { useRankedMaps } from '../features/maps/hooks/useRankedMaps';
+import { useRankedMaps, type RankedMap } from '../features/maps/hooks/useRankedMaps';
 
 export default function MapsView() {
   const { t } = useTranslation();
   const { rankedMaps, isLoading } = useRankedMaps();
-
-  const displayMaps = isLoading ? mapsDatabase : rankedMaps;
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 w-full duration-500">
@@ -25,15 +24,19 @@ export default function MapsView() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {displayMaps.map((map: any) => (
-            <MapCard
-              key={map.id}
-              name={map.name}
-              image={map.image}
-              grenadesCount={map.grenadesCount}
-              combosCount={map.combosCount}
-            />
-          ))}
+          {isLoading
+            ? Array.from({ length: mapsDatabase.length || 8 }).map((_, index) => (
+                <MapCardSkeleton key={`skeleton-all-${index}`} />
+              ))
+            : rankedMaps.map((map: RankedMap) => (
+                <MapCard
+                  key={map.id}
+                  name={map.name}
+                  image={map.image}
+                  grenadesCount={map.grenadesCount}
+                  combosCount={map.combosCount}
+                />
+              ))}
         </div>
       </section>
     </div>

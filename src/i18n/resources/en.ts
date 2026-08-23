@@ -112,6 +112,7 @@ const en = {
     executesLabel: 'EXECUTES',
     mapLabel: 'MAP',
     coordLabel: 'COORD',
+    scanningTacticalData: 'SCANNING TACTICAL DATA...',
     executionGuides: 'EXECUTION GUIDES',
     availableGuides: 'AVAILABLE GUIDES',
     editCombo: 'EDIT COMBO',
