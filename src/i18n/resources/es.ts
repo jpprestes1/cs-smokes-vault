@@ -220,6 +220,28 @@ const es = {
     needCreatorRole:
       'Permisos insuficientes: solo agentes con rol CREATOR o ADMIN pueden guardar tacticas en la nube.',
     needAuth: 'Debes estar autenticado para guardar tacticas en la nube.',
+    zoomIn: 'Aumentar Zoom',
+    zoomOut: 'Reducir Zoom',
+    resetZoom: 'Restablecer Zoom',
+    place: 'Colocar',
+    tool: 'Herramienta',
+    cursor: 'Cursor',
+    tools: {
+      pan: 'Mover',
+      pen: 'Pluma',
+      line: 'Línea',
+      arrow: 'Flecha',
+      eraser: 'Borrador',
+    },
+    entitiesList: {
+      PLAYER_T: 'Jugador TR',
+      PLAYER_CT: 'Jugador CT',
+      SMOKE: 'Smoke',
+      FLASH: 'Flash',
+      MOLOTOV: 'Molotov',
+      HE_GRENADE: 'Granada HE',
+      BOMB: 'C4',
+    },
   },
 } as const;
 

@@ -168,10 +168,6 @@ export default function TacticsBoard() {
           loadedStratId={loadedStratId}
           onSaveStrat={handleOpenSaveModal}
           onExportJson={handleExportJson}
-          zoom={zoom}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onResetZoom={handleResetZoom}
         />
 
         {/* Viewport Interativo com Radar */}
@@ -190,6 +186,9 @@ export default function TacticsBoard() {
           onRemoveEntity={handleRemoveEntity}
           onCursorMove={setCursorCoords}
           zoom={zoom}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onResetZoom={handleResetZoom}
         />
 
         {/* Barra de Status Inferior HUD */}

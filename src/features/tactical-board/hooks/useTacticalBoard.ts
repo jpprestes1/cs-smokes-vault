@@ -93,7 +93,6 @@ export function useTacticalBoard({
   const handleAddEntity = (newEntity: BoardEntity) => {
     pushHistory();
     setEntities((prev) => [...prev, newEntity]);
-    setActiveEntityTool(null);
   };
 
   const handleUpdateEntity = (entityId: string, updates: Partial<BoardEntity>) => {

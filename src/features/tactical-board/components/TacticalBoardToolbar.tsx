@@ -13,10 +13,6 @@ interface TacticalBoardToolbarProps {
   loadedStratId?: string | null;
   onSaveStrat: () => void;
   onExportJson: () => void;
-  zoom: number;
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  onResetZoom: () => void;
 }
 
 export default function TacticalBoardToolbar({
@@ -29,10 +25,6 @@ export default function TacticalBoardToolbar({
   loadedStratId,
   onSaveStrat,
   onExportJson,
-  zoom,
-  onZoomIn,
-  onZoomOut,
-  onResetZoom,
 }: TacticalBoardToolbarProps) {
   const { t } = useTranslation();
   const [isPresetsOpen, setIsPresetsOpen] = useState(false);
@@ -194,33 +186,6 @@ export default function TacticalBoardToolbar({
       >
         <span className="material-symbols-outlined text-[16px]">download</span>
       </button>
-
-      {/* Controles de Zoom */}
-      <div className="bg-surface-container-high/80 border-outline-variant glass-panel flex items-center rounded-sm border backdrop-blur-md">
-        <button
-          onClick={onZoomOut}
-          disabled={zoom <= 0.8}
-          className="text-on-surface hover:text-primary flex h-8 w-8 items-center justify-center transition-colors disabled:opacity-30"
-          title="Zoom Out"
-        >
-          <span className="material-symbols-outlined text-sm">remove</span>
-        </button>
-        <button
-          onClick={onResetZoom}
-          className="font-data-label text-on-surface-variant hover:text-primary px-1 text-[10px] font-bold"
-          title="Reset Zoom"
-        >
-          {Math.round(zoom * 100)}%
-        </button>
-        <button
-          onClick={onZoomIn}
-          disabled={zoom >= 2}
-          className="text-on-surface hover:text-primary flex h-8 w-8 items-center justify-center transition-colors disabled:opacity-30"
-          title="Zoom In"
-        >
-          <span className="material-symbols-outlined text-sm">add</span>
-        </button>
-      </div>
     </div>
   );
 }

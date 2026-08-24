@@ -1,4 +1,5 @@
 import React, { useRef, useState, useMemo, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { BoardEntity, BoardPath, BoardPoint, DrawingTool, EntityType } from '../types';
 
 interface TacticalBoardCanvasProps {
@@ -16,6 +17,9 @@ interface TacticalBoardCanvasProps {
   onRemoveEntity: (entityId: string) => void;
   onCursorMove: (coords: { x: number; y: number }) => void;
   zoom: number;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onResetZoom?: () => void;
 }
 
 export default function TacticalBoardCanvas({
@@ -33,7 +37,11 @@ export default function TacticalBoardCanvas({
   onRemoveEntity,
   onCursorMove,
   zoom,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
 }: TacticalBoardCanvasProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Estados de Desenho
@@ -408,7 +416,7 @@ export default function TacticalBoardCanvas({
           const defaultLabel = entity.type === 'PLAYER_T' ? 'T' : 'CT';
 
           const handleEntityPointerDown = (e: React.PointerEvent) => {
-            if (e.button === 1 || isSpacePressed || activeTool === 'pan') {
+            if (e.button === 1 || isSpacePressed || activeTool === 'pan' || activeEntityTool) {
               return;
             }
             e.stopPropagation();
@@ -423,7 +431,7 @@ export default function TacticalBoardCanvas({
 
           const handleDoubleClick = (e: React.MouseEvent) => {
             e.stopPropagation();
-            if (isPlayer) {
+            if (isPlayer && !activeEntityTool) {
               setEditingEntityId(entity.id);
               setTempLabel(entity.label || defaultLabel);
             }
@@ -434,22 +442,32 @@ export default function TacticalBoardCanvas({
               key={entity.id}
               onPointerDown={handleEntityPointerDown}
               onDoubleClick={handleDoubleClick}
-              onMouseEnter={() => setHoveredEntityId(entity.id)}
+              onMouseEnter={() => !activeEntityTool && setHoveredEntityId(entity.id)}
               onMouseLeave={() => setHoveredEntityId(null)}
               onContextMenu={(e) => {
                 e.preventDefault();
-                onRemoveEntity(entity.id);
+                if (!activeEntityTool) {
+                  onRemoveEntity(entity.id);
+                }
               }}
-              title={isPlayer ? 'Duplo clique para editar rótulo (ex: AWP, IGL, 1, 2)' : undefined}
+              title={
+                activeEntityTool
+                  ? undefined
+                  : isPlayer
+                    ? 'Duplo clique para editar rótulo (ex: AWP, IGL, 1, 2)'
+                    : undefined
+              }
               style={{
                 top: `${entity.y}%`,
                 left: `${entity.x}%`,
                 transform: 'translate(-50%, -50%)',
               }}
-              className={`absolute cursor-grab transition-transform active:cursor-grabbing ${
-                isHovered && activeTool === 'eraser'
-                  ? 'ring-error rounded-full opacity-50 ring-2'
-                  : ''
+              className={`absolute transition-transform ${
+                activeEntityTool
+                  ? 'pointer-events-none'
+                  : isHovered && activeTool === 'eraser'
+                    ? 'ring-error rounded-full opacity-50 ring-2'
+                    : 'cursor-grab active:cursor-grabbing'
               }`}
             >
               {/* Input Flutuante para Edição de Rótulo */}
@@ -530,20 +548,66 @@ export default function TacticalBoardCanvas({
               {/* HE Grenade */}
               {entity.type === 'HE_GRENADE' && (
                 <div className="flex h-6 w-6 items-center justify-center rounded-full border border-orange-400/60 bg-orange-500/20 shadow-[0_0_12px_rgba(249,115,22,0.5)] backdrop-blur-xs transition-transform hover:scale-110">
-                  <span className="material-symbols-outlined text-base text-orange-200">bomb</span>
+                  <span className="material-symbols-outlined !text-[16px] text-orange-200">
+                    bomb
+                  </span>
                 </div>
               )}
 
               {/* Bomb / C4 */}
               {entity.type === 'BOMB' && (
-                <div className="bg-surface-container border-primary-container flex h-8 w-8 items-center justify-center rounded-md border-2 text-amber-400 shadow-[0_0_12px_rgba(246,174,45,0.7)] transition-transform hover:scale-110">
-                  <span className="material-symbols-outlined text-base">crisis_alert</span>
+                <div className="bg-surface-container border-primary-container flex h-6 w-6 items-center justify-center rounded-md border-2 text-amber-400 shadow-[0_0_12px_rgba(246,174,45,0.7)] transition-transform hover:scale-110">
+                  <span className="material-symbols-outlined !text-[16px]">
+                    security_update_warning
+                  </span>
                 </div>
               )}
             </div>
           );
         })}
       </div>
+
+      {/* Controles de Zoom Flutuantes no Canto Inferior */}
+      {(onZoomIn || onZoomOut || onResetZoom) && (
+        <div
+          className="bg-surface-container-high/85 border-outline-variant glass-panel absolute right-4 bottom-4 z-30 flex items-center rounded-sm border shadow-2xl backdrop-blur-md"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {onZoomOut && (
+            <button
+              type="button"
+              onClick={onZoomOut}
+              disabled={zoom <= 0.8}
+              className="text-on-surface hover:text-primary flex h-8 w-8 items-center justify-center transition-colors disabled:opacity-30"
+              title={t('tacticalBoard.zoomOut', 'Diminuir Zoom')}
+            >
+              <span className="material-symbols-outlined text-sm">remove</span>
+            </button>
+          )}
+          {onResetZoom && (
+            <button
+              type="button"
+              onClick={onResetZoom}
+              className="font-data-label text-on-surface-variant hover:text-primary px-1.5 text-[10px] font-bold transition-colors"
+              title={t('tacticalBoard.resetZoom', 'Resetar Zoom')}
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+          )}
+          {onZoomIn && (
+            <button
+              type="button"
+              onClick={onZoomIn}
+              disabled={zoom >= 2}
+              className="text-on-surface hover:text-primary flex h-8 w-8 items-center justify-center transition-colors disabled:opacity-30"
+              title={t('tacticalBoard.zoomIn', 'Aumentar Zoom')}
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
