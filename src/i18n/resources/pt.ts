@@ -219,6 +219,28 @@ const pt = {
     needCreatorRole:
       'Permissao insuficiente: apenas agentes com cargo CREATOR ou ADMIN podem salvar taticas na nuvem.',
     needAuth: 'Voce precisa estar autenticado para salvar taticas na nuvem.',
+    zoomIn: 'Aumentar Zoom',
+    zoomOut: 'Diminuir Zoom',
+    resetZoom: 'Resetar Zoom',
+    place: 'Colocar',
+    tool: 'Ferramenta',
+    cursor: 'Cursor',
+    tools: {
+      pan: 'Mover',
+      pen: 'Caneta',
+      line: 'Linha',
+      arrow: 'Seta',
+      eraser: 'Borracha',
+    },
+    entitiesList: {
+      PLAYER_T: 'Jogador TR',
+      PLAYER_CT: 'Jogador CT',
+      SMOKE: 'Smoke',
+      FLASH: 'Flash',
+      MOLOTOV: 'Molotov',
+      HE_GRENADE: 'Granada HE',
+      BOMB: 'C4',
+    },
   },
 } as const;
 

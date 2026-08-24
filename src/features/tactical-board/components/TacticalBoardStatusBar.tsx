@@ -31,19 +31,20 @@ export default function TacticalBoardStatusBar({
           {t('tacticalBoard.liveEditor', 'LIVE EDITOR')}
         </span>
 
-        <span className="border-outline-variant/30 font-data-label text-outline-variant hidden border-l pl-4 text-[10px] sm:inline">
-          CURSOR: X: {String(cursorCoords.x).padStart(2, '0')}%, Y:{' '}
+        <span className="border-outline-variant/30 font-data-label text-outline-variant hidden border-l pl-4 text-[10px] uppercase sm:inline">
+          {t('tacticalBoard.cursor', 'CURSOR')}: X: {String(cursorCoords.x).padStart(2, '0')}%, Y:{' '}
           {String(cursorCoords.y).padStart(2, '0')}%
         </span>
 
         <span className="border-outline-variant/30 font-data-label text-primary/80 hidden border-l pl-4 text-[10px] uppercase md:inline">
-          {activeEntityTool ? `PLACE: ${activeEntityTool}` : `TOOL: ${activeTool.toUpperCase()}`}
+          {activeEntityTool
+            ? `${t('tacticalBoard.place', 'COLOCAR')}: ${t(`tacticalBoard.entitiesList.${activeEntityTool}`, activeEntityTool)}`
+            : `${t('tacticalBoard.tool', 'FERRAMENTA')}: ${t(`tacticalBoard.tools.${activeTool}`, activeTool)}`}
         </span>
       </div>
 
       {/* Lado Direito */}
       <div className="font-data-label text-outline-variant text-[10px] tracking-wider uppercase">
-        <span className="hidden sm:inline">TICKRATE: 128 | </span>
         <span className="text-primary-container font-bold">
           {selectedMapName}_{stratTitle || 'EXEC'}.JSON
         </span>

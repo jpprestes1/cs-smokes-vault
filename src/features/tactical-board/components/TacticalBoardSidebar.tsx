@@ -118,7 +118,7 @@ export default function TacticalBoardSidebar({
                 ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
                 : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
-            title="Pan / Mover Mapa (Espaço + Arraste)"
+            title={`${t('tacticalBoard.tools.pan', 'Mover')} (Space + Drag)`}
           >
             <span className="material-symbols-outlined text-base">pan_tool</span>
           </button>
@@ -131,7 +131,7 @@ export default function TacticalBoardSidebar({
                 ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
                 : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
-            title="Pen (Freehand)"
+            title={t('tacticalBoard.tools.pen', 'Caneta')}
           >
             <span className="material-symbols-outlined text-base">draw</span>
           </button>
@@ -144,7 +144,7 @@ export default function TacticalBoardSidebar({
                 ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
                 : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
-            title="Straight Line"
+            title={t('tacticalBoard.tools.line', 'Linha')}
           >
             <span className="material-symbols-outlined text-base">horizontal_rule</span>
           </button>
@@ -157,7 +157,7 @@ export default function TacticalBoardSidebar({
                 ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
                 : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
-            title="Arrow (Trajectory)"
+            title={t('tacticalBoard.tools.arrow', 'Seta')}
           >
             <span className="material-symbols-outlined text-base">arrow_right_alt</span>
           </button>
@@ -170,7 +170,7 @@ export default function TacticalBoardSidebar({
                 ? 'border-error/50 bg-error/20 text-error shadow-[0_0_10px_rgba(239,68,68,0.2)]'
                 : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
-            title="Eraser (Remove elements)"
+            title={t('tacticalBoard.tools.eraser', 'Borracha')}
           >
             <span className="material-symbols-outlined text-base">ink_eraser</span>
           </button>
@@ -214,7 +214,7 @@ export default function TacticalBoardSidebar({
               className={`bg-primary-container flex h-9 w-9 cursor-grab items-center justify-center rounded-full font-bold text-black shadow-[0_0_10px_rgba(246,174,45,0.4)] transition-all hover:scale-110 active:cursor-grabbing ${
                 activeEntityTool === 'PLAYER_T' ? 'scale-110 ring-2 ring-white' : ''
               }`}
-              title="Terrorist Player (Drag or Click to place)"
+              title={t('tacticalBoard.entitiesList.PLAYER_T', 'Jogador TR')}
             >
               T
             </div>
@@ -227,7 +227,7 @@ export default function TacticalBoardSidebar({
               className={`bg-secondary-container flex h-9 w-9 cursor-grab items-center justify-center rounded-full font-bold text-white shadow-[0_0_10px_rgba(1,100,180,0.4)] transition-all hover:scale-110 active:cursor-grabbing ${
                 activeEntityTool === 'PLAYER_CT' ? 'scale-110 ring-2 ring-white' : ''
               }`}
-              title="Counter-Terrorist Player (Drag or Click to place)"
+              title={t('tacticalBoard.entitiesList.PLAYER_CT', 'Jogador CT')}
             >
               CT
             </div>
@@ -250,7 +250,7 @@ export default function TacticalBoardSidebar({
                   ? 'border-primary bg-primary/20 ring-primary ring-1'
                   : ''
               }`}
-              title="Smoke Grenade"
+              title={t('tacticalBoard.entitiesList.SMOKE', 'Smoke')}
             >
               <span className="material-symbols-outlined text-xl text-gray-300">cloud</span>
             </div>
@@ -265,7 +265,7 @@ export default function TacticalBoardSidebar({
                   ? 'border-primary bg-primary/20 ring-primary ring-1'
                   : ''
               }`}
-              title="Flashbang"
+              title={t('tacticalBoard.entitiesList.FLASH', 'Flash')}
             >
               <span className="material-symbols-outlined text-xl text-yellow-300">flare</span>
             </div>
@@ -280,7 +280,7 @@ export default function TacticalBoardSidebar({
                   ? 'border-primary bg-primary/20 ring-primary ring-1'
                   : ''
               }`}
-              title="Molotov / Incendiary"
+              title={t('tacticalBoard.entitiesList.MOLOTOV', 'Molotov')}
             >
               <span className="material-symbols-outlined text-xl text-red-400">
                 local_fire_department
@@ -297,7 +297,7 @@ export default function TacticalBoardSidebar({
                   ? 'border-primary bg-primary/20 ring-primary ring-1'
                   : ''
               }`}
-              title="HE Grenade"
+              title={t('tacticalBoard.entitiesList.HE_GRENADE', 'Granada HE')}
             >
               <span className="material-symbols-outlined text-xl text-orange-400">bomb</span>
             </div>
@@ -312,9 +312,11 @@ export default function TacticalBoardSidebar({
                   ? 'border-primary bg-primary/20 ring-primary ring-1'
                   : ''
               }`}
-              title="C4 Explosive"
+              title={t('tacticalBoard.entitiesList.BOMB', 'C4')}
             >
-              <span className="material-symbols-outlined text-xl text-amber-500">crisis_alert</span>
+              <span className="material-symbols-outlined text-xl text-amber-500">
+                security_update_warning
+              </span>
             </div>
           </div>
         </div>

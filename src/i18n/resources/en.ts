@@ -218,6 +218,28 @@ const en = {
     needCreatorRole:
       'Insufficient permissions: only CREATOR or ADMIN operatives can save tactics to the cloud.',
     needAuth: 'You must be authenticated to save tactics to the cloud.',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    resetZoom: 'Reset Zoom',
+    place: 'Place',
+    tool: 'Tool',
+    cursor: 'Cursor',
+    tools: {
+      pan: 'Pan',
+      pen: 'Pen',
+      line: 'Line',
+      arrow: 'Arrow',
+      eraser: 'Eraser',
+    },
+    entitiesList: {
+      PLAYER_T: 'TR Player',
+      PLAYER_CT: 'CT Player',
+      SMOKE: 'Smoke',
+      FLASH: 'Flash',
+      MOLOTOV: 'Molotov',
+      HE_GRENADE: 'HE Grenade',
+      BOMB: 'C4',
+    },
   },
 } as const;
 
