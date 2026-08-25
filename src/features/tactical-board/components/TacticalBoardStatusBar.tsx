@@ -9,6 +9,7 @@ interface TacticalBoardStatusBarProps {
   stratTitle: string;
   entitiesCount: number;
   pathsCount: number;
+  currentTime?: number;
 }
 
 export default function TacticalBoardStatusBar({
@@ -19,8 +20,11 @@ export default function TacticalBoardStatusBar({
   stratTitle,
   entitiesCount,
   pathsCount,
+  currentTime = 0,
 }: TacticalBoardStatusBarProps) {
   const { t } = useTranslation();
+
+  const formattedTime = `${Math.floor(currentTime / 60)}:${String(currentTime % 60).padStart(2, '0')}`;
 
   return (
     <footer className="bg-surface-container-low flex h-10 shrink-0 items-center justify-between border-t border-white/5 px-4">
@@ -29,6 +33,10 @@ export default function TacticalBoardStatusBar({
         <span className="font-data-label text-on-surface-variant flex items-center gap-1.5 text-[10px] tracking-wider uppercase">
           <span className="bg-primary-container h-2 w-2 animate-pulse rounded-full" />
           {t('tacticalBoard.liveEditor', 'LIVE EDITOR')}
+        </span>
+
+        <span className="border-outline-variant/30 font-data-label text-primary bg-primary/10 border-primary/20 hidden rounded border px-2 py-0.5 text-[10px] font-bold uppercase sm:inline">
+          {t('tacticalBoard.time', 'TEMPO')}: {formattedTime}
         </span>
 
         <span className="border-outline-variant/30 font-data-label text-outline-variant hidden border-l pl-4 text-[10px] uppercase sm:inline">

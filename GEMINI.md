@@ -149,6 +149,38 @@ Registra jogadas compostas (*executes* com múltiplas granadas coordenadas).
   - `updatedAt?`: `string` (ISO 8601 timestamp da última edição)
   - `videos`: `VideoData[]`
 
+### 4. `strats` (Coleção)
+Registra táticas completas do Strat-Board com progressão de round em linha do tempo (0:00 a 1:40).
+- **Campos**:
+  - `id`: `string`
+  - `mapId`: `string`
+  - `title`: `string` (ex: "MIRAGE_A_EXECUTE")
+  - `description`: `string`
+  - `side`: `'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED'`
+  - `frames`: `StratFrame[]` (marcos de tempo: 0, 20, 40, 60, 80, 100 segundos)
+    - `time`: `number` (segundos decorridos no round)
+    - `entities`: `BoardEntity[]`
+      - `id`: `string`
+      - `type`: `'PLAYER_T' | 'PLAYER_CT' | 'SMOKE' | 'FLASH' | 'MOLOTOV' | 'HE_GRENADE' | 'BOMB'`
+      - `x`: `number` (0 a 100%)
+      - `y`: `number` (0 a 100%)
+      - `label?`: `string` (ex: "AWP", "IGL", "1", "2")
+      - `side?`: `'TERRORIST' | 'COUNTER-TERRORIST'`
+    - `paths`: `BoardPath[]`
+      - `id`: `string`
+      - `tool`: `'pen' | 'line' | 'arrow'`
+      - `points`: `{ x: number; y: number }[]`
+      - `color`: `string`
+      - `strokeWidth`: `number`
+      - `isDashed?`: `boolean`
+  - `paths`: `BoardPath[]` (espelho do frame 0 para retrocompatibilidade)
+  - `entities`: `BoardEntity[]` (espelho do frame 0 para retrocompatibilidade)
+  - `authorId`: `string`
+  - `authorEmail`: `string`
+  - `isPublic`: `boolean`
+  - `createdAt?`: `string` (ISO 8601 timestamp da criação)
+  - `updatedAt?`: `string` (ISO 8601 timestamp da última edição)
+
 ---
 
 ## 🎨 Sistema de Design & Identidade Visual

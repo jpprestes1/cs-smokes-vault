@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/hooks/useAuth';
-import type { BoardPath, BoardEntity } from '../types';
+import type { BoardPath, BoardEntity, StratFrame } from '../types';
 import { createStrat, updateStrat } from '../services/stratsService';
 
 interface SaveStratModalProps {
   mapId: string;
   stratTitle: string;
-  paths: BoardPath[];
-  entities: BoardEntity[];
+  frames?: StratFrame[];
+  paths?: BoardPath[];
+  entities?: BoardEntity[];
   loadedStratId: string | null;
   onClose: () => void;
   onSuccess: (savedTitle: string, stratId: string) => void;
@@ -17,8 +18,9 @@ interface SaveStratModalProps {
 export default function SaveStratModal({
   mapId,
   stratTitle,
-  paths,
-  entities,
+  frames = [],
+  paths = [],
+  entities = [],
   loadedStratId,
   onClose,
   onSuccess,
@@ -57,6 +59,7 @@ export default function SaveStratModal({
           title: title.trim().toUpperCase(),
           description: description.trim(),
           side,
+          frames,
           paths,
           entities,
         });
@@ -68,6 +71,7 @@ export default function SaveStratModal({
           mapId,
           description: description.trim(),
           side,
+          frames,
           paths,
           entities,
           authorId: user?.uid || '',

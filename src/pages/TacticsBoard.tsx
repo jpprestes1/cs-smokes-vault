@@ -6,6 +6,7 @@ import {
   TacticalBoardCanvas,
   TacticalBoardToolbar,
   TacticalBoardStatusBar,
+  TacticalBoardTimeline,
   SaveStratModal,
 } from '../features/tactical-board';
 
@@ -22,6 +23,9 @@ export default function TacticsBoard() {
     setStratTitle,
     paths,
     entities,
+    allFramesList,
+    currentTime,
+    isPlaying,
     cloudStrats,
     loadedStratId,
     isSaveModalOpen,
@@ -46,6 +50,12 @@ export default function TacticsBoard() {
     handleRemoveEntity,
     handleUndo,
     handleClear,
+    handleClearCurrentFrame,
+    handleCopyFrameToNext,
+    handleSetCurrentTime,
+    handleNextTime,
+    handlePrevTime,
+    handleTogglePlay,
     handleSelectMap,
     handleSelectPreset,
     handleSelectCloudStrat,
@@ -67,23 +77,30 @@ export default function TacticsBoard() {
   // Atalhos de Teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const isInputActive = ['INPUT', 'TEXTAREA'].includes(
+        (e.target as HTMLElement)?.tagName
+      );
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         handleUndo();
       } else if (e.key === 'Escape') {
         setActiveEntityTool(null);
         setActiveTool('select');
-      } else if (
-        (e.key === 'v' || e.key === 'V') &&
-        !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)
-      ) {
+      } else if ((e.key === 'v' || e.key === 'V') && !isInputActive) {
         setActiveEntityTool(null);
         setActiveTool('select');
+      } else if (e.key === 'ArrowLeft' && !isInputActive && !e.altKey && !e.ctrlKey) {
+        e.preventDefault();
+        handlePrevTime();
+      } else if (e.key === 'ArrowRight' && !isInputActive && !e.altKey && !e.ctrlKey) {
+        e.preventDefault();
+        handleNextTime();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, setActiveEntityTool, setActiveTool]);
+  }, [handleUndo, setActiveEntityTool, setActiveTool, handlePrevTime, handleNextTime]);
 
   return (
     <div className="bg-background fixed top-16 left-0 z-30 flex h-[calc(100vh-64px)] w-full overflow-hidden">
@@ -99,6 +116,7 @@ export default function TacticsBoard() {
         <SaveStratModal
           mapId={selectedMapId}
           stratTitle={stratTitle}
+          frames={allFramesList}
           paths={paths}
           entities={entities}
           loadedStratId={loadedStratId}
@@ -198,6 +216,19 @@ export default function TacticsBoard() {
           onResetZoom={handleResetZoom}
         />
 
+        {/* Linha do Tempo Tática (Timeline) */}
+        <TacticalBoardTimeline
+          currentTime={currentTime}
+          isPlaying={isPlaying}
+          framesList={allFramesList}
+          onSetTime={handleSetCurrentTime}
+          onNextTime={handleNextTime}
+          onPrevTime={handlePrevTime}
+          onTogglePlay={handleTogglePlay}
+          onCopyFrameToNext={handleCopyFrameToNext}
+          onClearCurrentFrame={handleClearCurrentFrame}
+        />
+
         {/* Barra de Status Inferior HUD */}
         <TacticalBoardStatusBar
           cursorCoords={cursorCoords}
@@ -207,6 +238,7 @@ export default function TacticsBoard() {
           stratTitle={stratTitle}
           entitiesCount={entities.length}
           pathsCount={paths.length}
+          currentTime={currentTime}
         />
       </section>
     </div>

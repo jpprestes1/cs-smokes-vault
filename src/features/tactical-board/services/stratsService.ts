@@ -11,7 +11,14 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import type { StratData, CreateStratDTO, UpdateStratDTO, BoardPath, BoardEntity } from '../types';
+import type {
+  StratData,
+  CreateStratDTO,
+  UpdateStratDTO,
+  BoardPath,
+  BoardEntity,
+  StratFrame,
+} from '../types';
 import { sanitizeForFirestore } from '../../../utils/firestoreSanitizer';
 
 const COLLECTION_NAME = 'strats';
@@ -53,19 +60,74 @@ function sanitizeEntities(entities: BoardEntity[] = []): BoardEntity[] {
   });
 }
 
+export function sanitizeFrames(frames: StratFrame[] = []): StratFrame[] {
+  return frames.map((frame) => ({
+    time: Number(frame.time) || 0,
+    entities: sanitizeEntities(frame.entities || []),
+    paths: sanitizePaths(frame.paths || []),
+  }));
+}
+
+function normalizeStrat(id: string, rawData: Record<string, unknown>): StratData {
+  const rootPaths = sanitizePaths((rawData.paths as BoardPath[]) || []);
+  const rootEntities = sanitizeEntities((rawData.entities as BoardEntity[]) || []);
+
+  const frames: StratFrame[] =
+    Array.isArray(rawData.frames) && rawData.frames.length > 0
+      ? sanitizeFrames(rawData.frames as StratFrame[])
+      : [
+          {
+            time: 0,
+            entities: rootEntities,
+            paths: rootPaths,
+          },
+        ];
+
+  return {
+    id,
+    title: (rawData.title as string) || 'UNTITLED_STRAT',
+    mapId: (rawData.mapId as string) || 'mirage',
+    description: (rawData.description as string) || '',
+    side: (rawData.side as string) || 'MIXED',
+    frames,
+    paths: frames[0]?.paths || rootPaths,
+    entities: frames[0]?.entities || rootEntities,
+    authorId: (rawData.authorId as string) || '',
+    authorEmail: (rawData.authorEmail as string) || '',
+    isPublic: rawData.isPublic !== undefined ? Boolean(rawData.isPublic) : true,
+    createdAt: (rawData.createdAt as string) || new Date().toISOString(),
+    updatedAt: (rawData.updatedAt as string) || new Date().toISOString(),
+  };
+}
+
 /**
  * Cria uma nova estratégia tática no Firestore
  */
 export async function createStrat(dto: CreateStratDTO): Promise<string> {
   const now = new Date().toISOString();
 
+  const sanitizedFrames =
+    dto.frames && dto.frames.length > 0
+      ? sanitizeFrames(dto.frames)
+      : [
+          {
+            time: 0,
+            entities: sanitizeEntities(dto.entities || []),
+            paths: sanitizePaths(dto.paths || []),
+          },
+        ];
+
+  const primaryPaths = sanitizedFrames[0]?.paths || sanitizePaths(dto.paths || []);
+  const primaryEntities = sanitizedFrames[0]?.entities || sanitizeEntities(dto.entities || []);
+
   const payload: Omit<StratData, 'id'> = {
     title: dto.title.trim(),
     mapId: dto.mapId,
     description: dto.description ? dto.description.trim() : '',
     side: dto.side || 'MIXED',
-    paths: sanitizePaths(dto.paths),
-    entities: sanitizeEntities(dto.entities),
+    frames: sanitizedFrames,
+    paths: primaryPaths,
+    entities: primaryEntities,
     authorId: dto.authorId || '',
     authorEmail: dto.authorEmail || '',
     isPublic: dto.isPublic !== undefined ? dto.isPublic : true,
@@ -90,8 +152,19 @@ export async function updateStrat(stratId: string, dto: UpdateStratDTO): Promise
   if (dto.title !== undefined) updatePayload.title = dto.title.trim();
   if (dto.description !== undefined) updatePayload.description = dto.description.trim();
   if (dto.side !== undefined) updatePayload.side = dto.side;
-  if (dto.paths !== undefined) updatePayload.paths = sanitizePaths(dto.paths);
-  if (dto.entities !== undefined) updatePayload.entities = sanitizeEntities(dto.entities);
+
+  if (dto.frames !== undefined) {
+    const cleanFrames = sanitizeFrames(dto.frames);
+    updatePayload.frames = cleanFrames;
+    if (cleanFrames.length > 0) {
+      updatePayload.paths = cleanFrames[0].paths;
+      updatePayload.entities = cleanFrames[0].entities;
+    }
+  } else {
+    if (dto.paths !== undefined) updatePayload.paths = sanitizePaths(dto.paths);
+    if (dto.entities !== undefined) updatePayload.entities = sanitizeEntities(dto.entities);
+  }
+
   if (dto.isPublic !== undefined) updatePayload.isPublic = dto.isPublic;
 
   const cleanPayload = sanitizeForFirestore(updatePayload);
@@ -118,10 +191,7 @@ export async function getStratById(stratId: string): Promise<StratData | null> {
     return null;
   }
 
-  return {
-    id: docSnap.id,
-    ...docSnap.data(),
-  } as StratData;
+  return normalizeStrat(docSnap.id, docSnap.data() as Record<string, unknown>);
 }
 
 /**
@@ -132,7 +202,7 @@ export async function getStratsByMap(mapId: string): Promise<StratData[]> {
   const querySnapshot = await getDocs(q);
   const strats: StratData[] = [];
   querySnapshot.forEach((d) => {
-    strats.push({ id: d.id, ...d.data() } as StratData);
+    strats.push(normalizeStrat(d.id, d.data() as Record<string, unknown>));
   });
   return strats;
 }
@@ -149,10 +219,9 @@ export function subscribeToStratsByMap(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const parsedStrats = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data(),
-      })) as StratData[];
+      const parsedStrats = snapshot.docs.map((d) =>
+        normalizeStrat(d.id, d.data() as Record<string, unknown>)
+      );
       callback(parsedStrats);
     },
     (err) => {
