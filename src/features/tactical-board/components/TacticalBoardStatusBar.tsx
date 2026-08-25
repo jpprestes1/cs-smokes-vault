@@ -27,7 +27,7 @@ export default function TacticalBoardStatusBar({
   const formattedTime = `${Math.floor(currentTime / 60)}:${String(currentTime % 60).padStart(2, '0')}`;
 
   return (
-    <footer className="bg-surface-container-low flex h-10 shrink-0 items-center justify-between border-t border-white/5 px-4">
+    <footer className="bg-surface-container-low flex h-9 shrink-0 items-center justify-between border-t border-white/5 px-4 select-none">
       {/* Lado Esquerdo */}
       <div className="flex items-center gap-4 overflow-hidden">
         <span className="font-data-label text-on-surface-variant flex items-center gap-1.5 text-[10px] tracking-wider uppercase">

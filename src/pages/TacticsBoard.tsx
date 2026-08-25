@@ -5,8 +5,8 @@ import {
   TacticalBoardSidebar,
   TacticalBoardCanvas,
   TacticalBoardToolbar,
-  TacticalBoardStatusBar,
   TacticalBoardTimeline,
+  TacticalBoardStatusBar,
   SaveStratModal,
 } from '../features/tactical-board';
 
@@ -196,38 +196,40 @@ export default function TacticsBoard() {
         />
 
         {/* Viewport Interativo com Radar */}
-        <TacticalBoardCanvas
-          radarImage={currentMap.radarImage}
-          paths={paths}
-          entities={entities}
-          activeTool={activeTool}
-          activeColor={activeColor}
-          isDashed={isDashed}
-          activeEntityTool={activeEntityTool}
-          onAddPath={handleAddPath}
-          onRemovePath={handleRemovePath}
-          onAddEntity={handleAddEntity}
-          onUpdateEntity={handleUpdateEntity}
-          onRemoveEntity={handleRemoveEntity}
-          onCursorMove={setCursorCoords}
-          zoom={zoom}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onResetZoom={handleResetZoom}
-        />
+        <div className="relative flex flex-1 overflow-hidden">
+          <TacticalBoardCanvas
+            radarImage={currentMap.radarImage}
+            paths={paths}
+            entities={entities}
+            activeTool={activeTool}
+            activeColor={activeColor}
+            isDashed={isDashed}
+            activeEntityTool={activeEntityTool}
+            onAddPath={handleAddPath}
+            onRemovePath={handleRemovePath}
+            onAddEntity={handleAddEntity}
+            onUpdateEntity={handleUpdateEntity}
+            onRemoveEntity={handleRemoveEntity}
+            onCursorMove={setCursorCoords}
+            zoom={zoom}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onResetZoom={handleResetZoom}
+          />
 
-        {/* Linha do Tempo Tática (Timeline) */}
-        <TacticalBoardTimeline
-          currentTime={currentTime}
-          isPlaying={isPlaying}
-          framesList={allFramesList}
-          onSetTime={handleSetCurrentTime}
-          onNextTime={handleNextTime}
-          onPrevTime={handlePrevTime}
-          onTogglePlay={handleTogglePlay}
-          onCopyFrameToNext={handleCopyFrameToNext}
-          onClearCurrentFrame={handleClearCurrentFrame}
-        />
+          {/* Linha do Tempo Tática Flutuante Minimalista */}
+          <TacticalBoardTimeline
+            currentTime={currentTime}
+            isPlaying={isPlaying}
+            framesList={allFramesList}
+            onSetTime={handleSetCurrentTime}
+            onNextTime={handleNextTime}
+            onPrevTime={handlePrevTime}
+            onTogglePlay={handleTogglePlay}
+            onCopyFrameToNext={handleCopyFrameToNext}
+            onClearCurrentFrame={handleClearCurrentFrame}
+          />
+        </div>
 
         {/* Barra de Status Inferior HUD */}
         <TacticalBoardStatusBar

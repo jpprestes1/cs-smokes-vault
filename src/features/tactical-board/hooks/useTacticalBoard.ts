@@ -37,35 +37,52 @@ function framesMapToArray(map: FramesMap): StratFrame[] {
   }));
 }
 
-function arrayToFramesMap(frames: StratFrame[] = [], fallbackEntities: BoardEntity[] = [], fallbackPaths: BoardPath[] = []): FramesMap {
+function arrayToFramesMap(
+  frames: StratFrame[] = [],
+  fallbackEntities: BoardEntity[] = [],
+  fallbackPaths: BoardPath[] = []
+): FramesMap {
   const map = createDefaultFrames();
 
   if (frames && frames.length > 0) {
     for (const f of frames) {
-      if (f.time !== undefined && map[f.time]) {
+      if (f.time !== undefined && map[f.time] !== undefined) {
         map[f.time] = {
-          entities: [...f.entities],
-          paths: [...f.paths],
+          entities: f.entities.map((e) => ({ ...e })),
+          paths: f.paths.map((p) => ({ ...p, points: [...p.points] })),
         };
       }
     }
-  } else {
-    // Se for formato legado (apenas entities e paths no frame 0), inicializa frame 0 e propaga players
-    const initialPlayers = fallbackEntities.filter((e) => e.type === 'PLAYER_T' || e.type === 'PLAYER_CT' || e.type === 'BOMB');
 
+    // Se algum frame posterior estiver vazio, propaga os jogadores do frame anterior
+    for (let i = 1; i < TIMELINE_TIMESTAMPS.length; i++) {
+      const prevTime = TIMELINE_TIMESTAMPS[i - 1];
+      const currTime = TIMELINE_TIMESTAMPS[i];
+      if (map[currTime].entities.length === 0 && map[prevTime].entities.length > 0) {
+        const prevPlayers = map[prevTime].entities.filter(
+          (e) => e.type === 'PLAYER_T' || e.type === 'PLAYER_CT' || e.type === 'BOMB'
+        );
+        map[currTime].entities = prevPlayers.map((p) => ({ ...p }));
+      }
+    }
+  } else {
+    // Formato legado (apenas entities e paths na raiz)
     map[0] = {
-      entities: [...fallbackEntities],
-      paths: [...fallbackPaths],
+      entities: fallbackEntities.map((e) => ({ ...e })),
+      paths: fallbackPaths.map((p) => ({ ...p, points: [...p.points] })),
     };
 
+    const initialPlayers = fallbackEntities.filter(
+      (e) => e.type === 'PLAYER_T' || e.type === 'PLAYER_CT' || e.type === 'BOMB'
+    );
+
     // Propaga players para os frames seguintes
-    for (const t of TIMELINE_TIMESTAMPS) {
-      if (t > 0) {
-        map[t] = {
-          entities: initialPlayers.map((p) => ({ ...p })),
-          paths: [],
-        };
-      }
+    for (let i = 1; i < TIMELINE_TIMESTAMPS.length; i++) {
+      const t = TIMELINE_TIMESTAMPS[i];
+      map[t] = {
+        entities: initialPlayers.map((p) => ({ ...p })),
+        paths: [],
+      };
     }
   }
 
@@ -178,30 +195,31 @@ export function useTacticalBoard({
     }));
   };
 
-  // Manipulação de Entidades com Propagação Inteligente de Jogadores
+  // Manipulação de Entidades: Adiciona ao frame atual e propaga inicialmente para frames posteriores
   const handleAddEntity = (newEntity: BoardEntity) => {
     pushHistory();
-    const isPlayer = newEntity.type === 'PLAYER_T' || newEntity.type === 'PLAYER_CT' || newEntity.type === 'BOMB';
+    const isPlayer =
+      newEntity.type === 'PLAYER_T' || newEntity.type === 'PLAYER_CT' || newEntity.type === 'BOMB';
 
     setFrames((prev) => {
-      const next = { ...prev };
+      const next: FramesMap = {};
+      for (const t of TIMELINE_TIMESTAMPS) {
+        next[t] = {
+          entities: (prev[t]?.entities || []).map((e) => ({ ...e })),
+          paths: (prev[t]?.paths || []).map((p) => ({ ...p, points: [...p.points] })),
+        };
+      }
 
       // Adiciona ao frame atual
-      next[currentTime] = {
-        ...next[currentTime],
-        entities: [...(next[currentTime]?.entities || []), newEntity],
-      };
+      next[currentTime].entities.push({ ...newEntity });
 
-      // Se for jogador e estiver adicionando no tempo atual, propaga para os tempos posteriores
+      // Se for jogador/bomba, propaga inicialmente para frames posteriores que ainda não o possuem
       if (isPlayer) {
         for (const t of TIMELINE_TIMESTAMPS) {
           if (t > currentTime) {
-            const exists = (next[t]?.entities || []).some((e) => e.id === newEntity.id);
-            if (!exists) {
-              next[t] = {
-                ...next[t],
-                entities: [...(next[t]?.entities || []), { ...newEntity }],
-              };
+            const alreadyExists = next[t].entities.some((e) => e.id === newEntity.id);
+            if (!alreadyExists) {
+              next[t].entities.push({ ...newEntity });
             }
           }
         }
@@ -211,59 +229,52 @@ export function useTacticalBoard({
     });
   };
 
+  // Atualiza posição/rótulo da entidade ESTRITAMENTE no marco temporal ativo (currentTime)
   const handleUpdateEntity = (entityId: string, updates: Partial<BoardEntity>) => {
     setFrames((prev) => {
       const currentEntities = prev[currentTime]?.entities || [];
       const targetEntity = currentEntities.find((e) => e.id === entityId);
       if (!targetEntity) return prev;
 
-      const oldX = targetEntity.x;
-      const oldY = targetEntity.y;
-      const isPlayer = targetEntity.type === 'PLAYER_T' || targetEntity.type === 'PLAYER_CT' || targetEntity.type === 'BOMB';
-
-      const next = { ...prev };
-
-      // Atualiza no frame atual
-      next[currentTime] = {
-        ...next[currentTime],
-        entities: currentEntities.map((e) => (e.id === entityId ? { ...e, ...updates } : e)),
+      return {
+        ...prev,
+        [currentTime]: {
+          ...prev[currentTime],
+          entities: currentEntities.map((e) =>
+            e.id === entityId ? { ...e, ...updates } : e
+          ),
+        },
       };
-
-      // Se for jogador e a posição mudou, propaga a nova posição para os frames posteriores
-      // que ainda estavam na mesma posição antiga (não editados individualmente)
-      if (isPlayer && (updates.x !== undefined || updates.y !== undefined)) {
-        for (const t of TIMELINE_TIMESTAMPS) {
-          if (t > currentTime) {
-            next[t] = {
-              ...next[t],
-              entities: (next[t]?.entities || []).map((e) => {
-                if (e.id === entityId) {
-                  // Se estava na posição anterior (não modificada no frame futuro), move para a nova
-                  const wasAtOldPos = Math.abs(e.x - oldX) < 0.01 && Math.abs(e.y - oldY) < 0.01;
-                  if (wasAtOldPos) {
-                    return { ...e, ...updates };
-                  }
-                }
-                return e;
-              }),
-            };
-          }
-        }
-      }
-
-      return next;
     });
   };
 
   const handleRemoveEntity = (entityId: string) => {
     pushHistory();
     setFrames((prev) => {
-      const next = { ...prev };
-      // Remove do frame atual
-      next[currentTime] = {
-        ...next[currentTime],
-        entities: (next[currentTime]?.entities || []).filter((e) => e.id !== entityId),
-      };
+      const isPlayer = prev[currentTime]?.entities.some(
+        (e) =>
+          e.id === entityId &&
+          (e.type === 'PLAYER_T' || e.type === 'PLAYER_CT' || e.type === 'BOMB')
+      );
+
+      const next: FramesMap = {};
+      for (const t of TIMELINE_TIMESTAMPS) {
+        // Se for jogador e removido no tempo 0:00, remove de todos os frames
+        if (isPlayer && currentTime === 0) {
+          next[t] = {
+            ...prev[t],
+            entities: (prev[t]?.entities || []).filter((e) => e.id !== entityId),
+          };
+        } else if (t === currentTime) {
+          // Caso contrário, remove apenas do frame atual
+          next[t] = {
+            ...prev[t],
+            entities: (prev[t]?.entities || []).filter((e) => e.id !== entityId),
+          };
+        } else {
+          next[t] = prev[t];
+        }
+      }
       return next;
     });
   };
