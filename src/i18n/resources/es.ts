@@ -227,6 +227,7 @@ const es = {
     tool: 'Herramienta',
     cursor: 'Cursor',
     tools: {
+      select: 'Puntero',
       pan: 'Mover',
       pen: 'Pluma',
       line: 'Línea',

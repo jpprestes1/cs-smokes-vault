@@ -109,7 +109,20 @@ export default function TacticalBoardSidebar({
           </button>
         </div>
 
-        <div className="grid grid-cols-5 gap-1.5">
+        <div className="grid grid-cols-6 gap-1">
+          {/* Pointer / Select */}
+          <button
+            onClick={() => handleToolClick('select')}
+            className={`flex h-10 w-full items-center justify-center rounded-sm border transition-colors ${
+              activeTool === 'select' && !activeEntityTool
+                ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
+                : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
+            }`}
+            title={t('tacticalBoard.tools.select', 'Ponteiro')}
+          >
+            <span className="material-symbols-outlined text-base">near_me</span>
+          </button>
+
           {/* Pan / Move */}
           <button
             onClick={() => handleToolClick('pan')}

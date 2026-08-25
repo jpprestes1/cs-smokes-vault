@@ -132,8 +132,8 @@ export default function TacticalBoardCanvas({
     if (
       e.button === 1 ||
       isSpacePressed ||
-      activeTool === 'pan' ||
-      (zoom > 1 && e.target === e.currentTarget)
+      (!activeEntityTool && activeTool === 'pan') ||
+      (!activeEntityTool && zoom > 1 && e.target === e.currentTarget)
     ) {
       e.preventDefault();
       startPanning(e.clientX, e.clientY);
@@ -142,8 +142,8 @@ export default function TacticalBoardCanvas({
 
   // Pointer Down (Início do Desenho, Pan ou Colocação de Entidade)
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Botão do meio (Scroll wheel click), Espaço ou Ferramenta Pan ativam movimentação
-    if (e.button === 1 || isSpacePressed || activeTool === 'pan') {
+    // Botão do meio (Scroll wheel click) ou Espaço ativam movimentação mesmo com ferramenta ativa
+    if (e.button === 1 || isSpacePressed) {
       e.preventDefault();
       e.stopPropagation();
       startPanning(e.clientX, e.clientY);
@@ -152,9 +152,9 @@ export default function TacticalBoardCanvas({
 
     if (e.button !== 0) return;
 
-    const pt = getCanvasCoords(e);
-
+    // Se houver uma entidade selecionada (Smoke, Flash, Jogador, etc.), ela tem prioridade
     if (activeEntityTool) {
+      const pt = getCanvasCoords(e);
       const newEntity: BoardEntity = {
         id: `entity-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         type: activeEntityTool,
@@ -177,7 +177,17 @@ export default function TacticalBoardCanvas({
       return;
     }
 
-    if (activeTool === 'eraser') return;
+    // Ferramenta Pan ativada via clique esquerdo
+    if (activeTool === 'pan') {
+      e.preventDefault();
+      e.stopPropagation();
+      startPanning(e.clientX, e.clientY);
+      return;
+    }
+
+    const pt = getCanvasCoords(e);
+
+    if (activeTool === 'eraser' || activeTool === 'select') return;
 
     setIsDrawing(true);
     setCurrentPoints([pt]);
@@ -293,16 +303,25 @@ export default function TacticalBoardCanvas({
   // Determina o cursor dinâmico
   const getCursorClass = () => {
     if (isPanning) return 'cursor-grabbing';
+    if (activeEntityTool) return 'cursor-cell';
     if (isSpacePressed || activeTool === 'pan') return 'cursor-grab';
     if (activeTool === 'eraser') return 'cursor-pointer';
-    if (activeEntityTool) return 'cursor-cell';
+    if (activeTool === 'select') return 'cursor-default';
     return 'cursor-crosshair';
   };
 
   return (
     <div
       className={`bg-grid relative flex h-full w-full flex-1 items-center justify-center overflow-hidden p-4 select-none md:p-8 ${
-        isPanning ? 'cursor-grabbing' : isSpacePressed || activeTool === 'pan' ? 'cursor-grab' : ''
+        isPanning
+          ? 'cursor-grabbing'
+          : activeEntityTool
+            ? 'cursor-cell'
+            : isSpacePressed || activeTool === 'pan'
+              ? 'cursor-grab'
+              : activeTool === 'select'
+                ? 'cursor-default'
+                : ''
       }`}
       onPointerDown={handleOuterPointerDown}
       onPointerMove={handlePointerMove}

@@ -225,6 +225,7 @@ const en = {
     tool: 'Tool',
     cursor: 'Cursor',
     tools: {
+      select: 'Pointer',
       pan: 'Pan',
       pen: 'Pen',
       line: 'Line',

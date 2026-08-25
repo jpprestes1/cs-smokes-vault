@@ -226,6 +226,7 @@ const pt = {
     tool: 'Ferramenta',
     cursor: 'Cursor',
     tools: {
+      select: 'Ponteiro',
       pan: 'Mover',
       pen: 'Caneta',
       line: 'Linha',

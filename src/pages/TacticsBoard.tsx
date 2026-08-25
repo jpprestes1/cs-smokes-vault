@@ -72,11 +72,18 @@ export default function TacticsBoard() {
         handleUndo();
       } else if (e.key === 'Escape') {
         setActiveEntityTool(null);
+        setActiveTool('select');
+      } else if (
+        (e.key === 'v' || e.key === 'V') &&
+        !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)
+      ) {
+        setActiveEntityTool(null);
+        setActiveTool('select');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, setActiveEntityTool]);
+  }, [handleUndo, setActiveEntityTool, setActiveTool]);
 
   return (
     <div className="bg-background fixed top-16 left-0 z-30 flex h-[calc(100vh-64px)] w-full overflow-hidden">
