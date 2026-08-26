@@ -16,6 +16,7 @@ import { deleteStrat } from '../services/stratsService';
 
 interface UseTacticalBoardProps {
   initialMapId?: string;
+  userId?: string;
   onMapChange?: (mapId: string) => void;
 }
 
@@ -91,6 +92,7 @@ function arrayToFramesMap(
 
 export function useTacticalBoard({
   initialMapId = 'mirage',
+  userId,
   onMapChange,
 }: UseTacticalBoardProps = {}) {
   const { t } = useTranslation();
@@ -117,8 +119,8 @@ export function useTacticalBoard({
   // Frames táticos indexados por timestamp
   const [frames, setFrames] = useState<FramesMap>(createDefaultFrames());
 
-  // Carrega em tempo real estratégias da nuvem (Firestore) para o mapa atual
-  const { cloudStrats } = useCloudStrats(selectedMapId);
+  // Carrega em tempo real estratégias da nuvem (Firestore) para o mapa e usuário atual
+  const { cloudStrats } = useCloudStrats(selectedMapId, userId);
 
   // Ajusta estado se initialMapId mudar via props durante a renderização
   if (initialMapId !== prevInitialMapId) {

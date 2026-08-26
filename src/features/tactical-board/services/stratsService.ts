@@ -195,10 +195,15 @@ export async function getStratById(stratId: string): Promise<StratData | null> {
 }
 
 /**
- * Busca todas as estratégias de um mapa
+ * Busca todas as estratégias de um mapa criadas por um usuário específico
  */
-export async function getStratsByMap(mapId: string): Promise<StratData[]> {
-  const q = query(collection(db, COLLECTION_NAME), where('mapId', '==', mapId));
+export async function getStratsByMap(mapId: string, authorId?: string): Promise<StratData[]> {
+  if (!mapId || !authorId) return [];
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('mapId', '==', mapId),
+    where('authorId', '==', authorId)
+  );
   const querySnapshot = await getDocs(q);
   const strats: StratData[] = [];
   querySnapshot.forEach((d) => {
@@ -208,13 +213,23 @@ export async function getStratsByMap(mapId: string): Promise<StratData[]> {
 }
 
 /**
- * Escuta em tempo real as estratégias de um mapa específico
+ * Escuta em tempo real as estratégias de um mapa específico para um usuário criador (authorId)
  */
 export function subscribeToStratsByMap(
   mapId: string,
+  authorId: string | undefined,
   callback: (strats: StratData[]) => void
 ): () => void {
-  const q = query(collection(db, COLLECTION_NAME), where('mapId', '==', mapId));
+  if (!mapId || !authorId) {
+    const timer = setTimeout(() => callback([]), 0);
+    return () => clearTimeout(timer);
+  }
+
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('mapId', '==', mapId),
+    where('authorId', '==', authorId)
+  );
 
   const unsubscribe = onSnapshot(
     q,
@@ -231,3 +246,4 @@ export function subscribeToStratsByMap(
 
   return unsubscribe;
 }
+

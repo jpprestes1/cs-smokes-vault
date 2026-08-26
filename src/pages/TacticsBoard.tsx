@@ -73,6 +73,7 @@ export default function TacticsBoard() {
     handleResetZoom,
   } = useTacticalBoard({
     initialMapId: mapId || 'mirage',
+    userId: user?.uid,
     onMapChange: (newMapId) => {
       navigate(`/strat-board/${newMapId}`, { replace: true });
     },
