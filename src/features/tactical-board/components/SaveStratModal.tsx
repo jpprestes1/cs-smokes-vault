@@ -7,17 +7,26 @@ import { createStrat, updateStrat } from '../services/stratsService';
 interface SaveStratModalProps {
   mapId: string;
   stratTitle: string;
+  stratDescription?: string;
+  stratSide?: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED';
   frames?: StratFrame[];
   paths?: BoardPath[];
   entities?: BoardEntity[];
   loadedStratId: string | null;
   onClose: () => void;
-  onSuccess: (savedTitle: string, stratId: string) => void;
+  onSuccess: (
+    savedTitle: string,
+    savedDescription: string,
+    savedSide: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED',
+    stratId: string
+  ) => void;
 }
 
 export default function SaveStratModal({
   mapId,
   stratTitle,
+  stratDescription = '',
+  stratSide = 'MIXED',
   frames = [],
   paths = [],
   entities = [],
@@ -31,8 +40,8 @@ export default function SaveStratModal({
   const canSave = Boolean(user);
 
   const [title, setTitle] = useState(stratTitle || '');
-  const [description, setDescription] = useState('');
-  const [side, setSide] = useState<'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED'>('MIXED');
+  const [description, setDescription] = useState(stratDescription || '');
+  const [side, setSide] = useState<'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED'>(stratSide);
   const [saveAsNew, setSaveAsNew] = useState(!loadedStratId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +72,7 @@ export default function SaveStratModal({
           paths,
           entities,
         });
-        onSuccess(title.trim().toUpperCase(), loadedStratId);
+        onSuccess(title.trim().toUpperCase(), description.trim(), side, loadedStratId);
       } else {
         // Criar nova estratégia vinculada ao usuário atual
         const newId = await createStrat({
@@ -78,7 +87,7 @@ export default function SaveStratModal({
           authorEmail: user?.email || '',
           isPublic: true,
         });
-        onSuccess(title.trim().toUpperCase(), newId);
+        onSuccess(title.trim().toUpperCase(), description.trim(), side, newId);
       }
     } catch (err: unknown) {
       console.error('Erro ao salvar estratégia:', err);

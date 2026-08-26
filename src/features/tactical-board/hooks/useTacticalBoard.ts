@@ -110,6 +110,10 @@ export function useTacticalBoard({
 
   // Título da estratégia
   const [stratTitle, setStratTitle] = useState<string>('UNTITLED_STRAT');
+  // Descrição da estratégia
+  const [stratDescription, setStratDescription] = useState<string>('');
+  // Lado da estratégia
+  const [stratSide, setStratSide] = useState<'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED'>('MIXED');
 
   // Timeline: Tempo atual em segundos (0, 20, 40, 60, 80, 100)
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -128,6 +132,8 @@ export function useTacticalBoard({
     setSelectedMapId(initialMapId);
     setLoadedStratId(null);
     setStratTitle('UNTITLED_STRAT');
+    setStratDescription('');
+    setStratSide('MIXED');
     setFrames(createDefaultFrames());
     setCurrentTime(0);
     setIsPlaying(false);
@@ -295,6 +301,8 @@ export function useTacticalBoard({
     setFrames(createDefaultFrames());
     setLoadedStratId(null);
     setStratTitle('UNTITLED_STRAT');
+    setStratDescription('');
+    setStratSide('MIXED');
     showToast(t('tacticalBoard.boardCleared', 'Quadro limpo!'));
   };
 
@@ -383,6 +391,8 @@ export function useTacticalBoard({
     setSelectedMapId(mapId);
     setLoadedStratId(null);
     setStratTitle('UNTITLED_STRAT');
+    setStratDescription('');
+    setStratSide('MIXED');
     setFrames(createDefaultFrames());
     setCurrentTime(0);
     setIsPlaying(false);
@@ -396,6 +406,8 @@ export function useTacticalBoard({
     pushHistory();
     setSelectedMapId(preset.mapId);
     setStratTitle(preset.title);
+    setStratDescription(preset.description || '');
+    setStratSide(preset.side || 'MIXED');
     setFrames(arrayToFramesMap(preset.frames, preset.entities || [], preset.paths || []));
     setCurrentTime(0);
     setIsPlaying(false);
@@ -411,6 +423,12 @@ export function useTacticalBoard({
     pushHistory();
     setSelectedMapId(strat.mapId);
     setStratTitle(strat.title);
+    setStratDescription(strat.description || '');
+    const validSide =
+      strat.side === 'TERRORIST' || strat.side === 'COUNTER-TERRORIST'
+        ? strat.side
+        : 'MIXED';
+    setStratSide(validSide);
     setFrames(arrayToFramesMap(strat.frames, strat.entities || [], strat.paths || []));
     setCurrentTime(0);
     setIsPlaying(false);
@@ -428,6 +446,8 @@ export function useTacticalBoard({
       if (loadedStratId === stratId) {
         setLoadedStratId(null);
         setStratTitle('UNTITLED_STRAT');
+        setStratDescription('');
+        setStratSide('MIXED');
         setFrames(createDefaultFrames());
         setCurrentTime(0);
       }
@@ -439,8 +459,15 @@ export function useTacticalBoard({
   };
 
   // Callback de sucesso ao salvar
-  const handleStratSavedSuccessfully = (savedTitle: string, stratId: string) => {
+  const handleStratSavedSuccessfully = (
+    savedTitle: string,
+    savedDescription: string,
+    savedSide: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED',
+    stratId: string
+  ) => {
     setStratTitle(savedTitle);
+    setStratDescription(savedDescription);
+    setStratSide(savedSide);
     setLoadedStratId(stratId);
     setIsSaveModalOpen(false);
     showToast(t('tacticalBoard.stratSaved', 'Estratégia salva com sucesso!'));
@@ -458,6 +485,8 @@ export function useTacticalBoard({
       id: loadedStratId || `strat-${Date.now()}`,
       title: stratTitle || 'STRAT',
       mapId: selectedMapId,
+      description: stratDescription || '',
+      side: stratSide,
       frames: allFrames,
       paths: allFrames[0]?.paths || [],
       entities: allFrames[0]?.entities || [],
@@ -489,6 +518,10 @@ export function useTacticalBoard({
     currentMap,
     stratTitle,
     setStratTitle,
+    stratDescription,
+    setStratDescription,
+    stratSide,
+    setStratSide,
     paths,
     entities,
     frames,

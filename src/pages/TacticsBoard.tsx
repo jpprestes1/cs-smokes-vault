@@ -25,6 +25,8 @@ export default function TacticsBoard() {
     currentMap,
     stratTitle,
     setStratTitle,
+    stratDescription,
+    stratSide,
     paths,
     entities,
     allFramesList,
@@ -121,8 +123,11 @@ export default function TacticsBoard() {
       {/* Modal de Salvar Estratégia no Firestore */}
       {isSaveModalOpen && isAuthenticated && (
         <SaveStratModal
+          key={loadedStratId || 'new-strat'}
           mapId={selectedMapId}
           stratTitle={stratTitle}
+          stratDescription={stratDescription}
+          stratSide={stratSide}
           frames={allFramesList}
           paths={paths}
           entities={entities}

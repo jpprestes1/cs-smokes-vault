@@ -40,6 +40,7 @@ export interface StratPreset {
   title: string;
   mapId: string;
   description?: string;
+  side?: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED';
   paths?: BoardPath[];
   entities?: BoardEntity[];
   frames?: StratFrame[];
