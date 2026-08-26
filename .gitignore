@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+*.exe
+
+# Firebase
+firestore.rules
+.firebaserc
