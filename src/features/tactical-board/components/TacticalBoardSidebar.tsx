@@ -18,6 +18,7 @@ interface TacticalBoardSidebarProps {
   onUndo: () => void;
   onClear: () => void;
   canUndo: boolean;
+  disabled?: boolean;
 }
 
 const COLORS = ['#f6ae2d', '#ef4444', '#0164b4', '#ffffff', '#22c55e', '#131313'];
@@ -37,15 +38,18 @@ export default function TacticalBoardSidebar({
   onUndo,
   onClear,
   canUndo,
+  disabled = false,
 }: TacticalBoardSidebarProps) {
   const { t } = useTranslation();
 
   const handleToolClick = (tool: DrawingTool) => {
+    if (disabled) return;
     onSelectEntityTool(null);
     onSelectTool(tool);
   };
 
   const handleEntityClick = (type: EntityType) => {
+    if (disabled) return;
     if (activeEntityTool === type) {
       onSelectEntityTool(null);
     } else {
@@ -54,7 +58,11 @@ export default function TacticalBoardSidebar({
   };
 
   return (
-    <aside className="bg-surface-container-low/90 glass-panel relative z-40 hidden h-full w-72 flex-col overflow-y-auto border-r border-white/5 backdrop-blur-xl md:flex">
+    <aside
+      className={`bg-surface-container-low/90 glass-panel relative z-40 hidden h-full w-72 flex-col overflow-y-auto border-r border-white/5 backdrop-blur-xl md:flex ${
+        disabled ? 'select-none' : ''
+      }`}
+    >
       {/* Cabeçalho */}
       <div className="border-b border-white/5 p-6">
         <h2 className="font-headline-md-mobile text-headline-md-mobile text-primary mb-1 font-bold">
@@ -63,6 +71,13 @@ export default function TacticalBoardSidebar({
         <p className="font-data-label text-data-label text-on-surface-variant">
           {t('tacticalBoard.liveEditor', 'Live Execution Editor')}
         </p>
+
+        {disabled && (
+          <div className="mt-3 flex items-center gap-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold text-amber-300">
+            <span className="material-symbols-outlined text-[13px]">lock</span>
+            <span>{t('tacticalBoard.authLockedStatus', 'ACESSO BLOQUEADO')}</span>
+          </div>
+        )}
       </div>
 
       {/* Seletor de Mapa */}
@@ -72,9 +87,14 @@ export default function TacticalBoardSidebar({
         </label>
         <div className="relative">
           <select
+            disabled={disabled}
             value={selectedMapId}
             onChange={(e) => onSelectMap(e.target.value)}
-            className="bg-surface-container-high border-outline-variant text-on-surface font-body-base hover:border-outline focus:border-primary focus:ring-primary w-full cursor-pointer appearance-none rounded-sm border py-2 pr-8 pl-3 transition-colors focus:ring-1 focus:outline-none"
+            className={`bg-surface-container-high border-outline-variant text-on-surface font-body-base w-full appearance-none rounded-sm border py-2 pr-8 pl-3 transition-colors ${
+              disabled
+                ? 'cursor-not-allowed opacity-40'
+                : 'hover:border-outline focus:border-primary focus:ring-primary cursor-pointer focus:ring-1 focus:outline-none'
+            }`}
           >
             {mapsDatabase.map((m) => (
               <option key={m.id} value={m.id} className="bg-surface-container-high text-on-surface">
@@ -97,11 +117,14 @@ export default function TacticalBoardSidebar({
             {t('tacticalBoard.drawingTools', 'DRAWING TOOLS')}
           </label>
           <button
+            disabled={disabled}
             onClick={onToggleDashed}
             className={`font-data-label rounded border px-1.5 py-0.5 text-[10px] transition-all ${
-              isDashed
-                ? 'border-primary/40 bg-primary/20 text-primary font-bold'
-                : 'text-on-surface-variant hover:text-on-surface border-white/10'
+              disabled
+                ? 'cursor-not-allowed opacity-30'
+                : isDashed
+                  ? 'border-primary/40 bg-primary/20 text-primary font-bold'
+                  : 'text-on-surface-variant hover:text-on-surface border-white/10'
             }`}
             title="Toggle Dashed/Solid Stroke"
           >
@@ -112,11 +135,14 @@ export default function TacticalBoardSidebar({
         <div className="grid grid-cols-6 gap-1">
           {/* Pointer / Select */}
           <button
+            disabled={disabled}
             onClick={() => handleToolClick('select')}
             className={`flex h-10 w-full items-center justify-center rounded-sm border transition-colors ${
-              activeTool === 'select' && !activeEntityTool
-                ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
-                : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
+              disabled
+                ? 'bg-surface-container-high border-outline-variant text-on-surface-variant/40 cursor-not-allowed opacity-40'
+                : activeTool === 'select' && !activeEntityTool
+                  ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
+                  : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
             title={t('tacticalBoard.tools.select', 'Ponteiro')}
           >
@@ -125,11 +151,14 @@ export default function TacticalBoardSidebar({
 
           {/* Pan / Move */}
           <button
+            disabled={disabled}
             onClick={() => handleToolClick('pan')}
             className={`flex h-10 w-full items-center justify-center rounded-sm border transition-colors ${
-              activeTool === 'pan' && !activeEntityTool
-                ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
-                : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
+              disabled
+                ? 'bg-surface-container-high border-outline-variant text-on-surface-variant/40 cursor-not-allowed opacity-40'
+                : activeTool === 'pan' && !activeEntityTool
+                  ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
+                  : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
             title={`${t('tacticalBoard.tools.pan', 'Mover')} (Space + Drag)`}
           >
@@ -138,11 +167,14 @@ export default function TacticalBoardSidebar({
 
           {/* Pen */}
           <button
+            disabled={disabled}
             onClick={() => handleToolClick('pen')}
             className={`flex h-10 w-full items-center justify-center rounded-sm border transition-colors ${
-              activeTool === 'pen' && !activeEntityTool
-                ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
-                : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
+              disabled
+                ? 'bg-surface-container-high border-outline-variant text-on-surface-variant/40 cursor-not-allowed opacity-40'
+                : activeTool === 'pen' && !activeEntityTool
+                  ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
+                  : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
             title={t('tacticalBoard.tools.pen', 'Caneta')}
           >
@@ -151,11 +183,14 @@ export default function TacticalBoardSidebar({
 
           {/* Line */}
           <button
+            disabled={disabled}
             onClick={() => handleToolClick('line')}
             className={`flex h-10 w-full items-center justify-center rounded-sm border transition-colors ${
-              activeTool === 'line' && !activeEntityTool
-                ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
-                : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
+              disabled
+                ? 'bg-surface-container-high border-outline-variant text-on-surface-variant/40 cursor-not-allowed opacity-40'
+                : activeTool === 'line' && !activeEntityTool
+                  ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
+                  : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
             title={t('tacticalBoard.tools.line', 'Linha')}
           >
@@ -164,11 +199,14 @@ export default function TacticalBoardSidebar({
 
           {/* Arrow */}
           <button
+            disabled={disabled}
             onClick={() => handleToolClick('arrow')}
             className={`flex h-10 w-full items-center justify-center rounded-sm border transition-colors ${
-              activeTool === 'arrow' && !activeEntityTool
-                ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
-                : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
+              disabled
+                ? 'bg-surface-container-high border-outline-variant text-on-surface-variant/40 cursor-not-allowed opacity-40'
+                : activeTool === 'arrow' && !activeEntityTool
+                  ? 'border-primary/50 bg-primary/20 text-primary shadow-[0_0_10px_rgba(246,174,45,0.2)]'
+                  : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
             title={t('tacticalBoard.tools.arrow', 'Seta')}
           >
@@ -177,11 +215,14 @@ export default function TacticalBoardSidebar({
 
           {/* Eraser */}
           <button
+            disabled={disabled}
             onClick={() => handleToolClick('eraser')}
             className={`flex h-10 w-full items-center justify-center rounded-sm border transition-colors ${
-              activeTool === 'eraser' && !activeEntityTool
-                ? 'border-error/50 bg-error/20 text-error shadow-[0_0_10px_rgba(239,68,68,0.2)]'
-                : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
+              disabled
+                ? 'bg-surface-container-high border-outline-variant text-on-surface-variant/40 cursor-not-allowed opacity-40'
+                : activeTool === 'eraser' && !activeEntityTool
+                  ? 'border-error/50 bg-error/20 text-error shadow-[0_0_10px_rgba(239,68,68,0.2)]'
+                  : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:bg-surface-variant/50'
             }`}
             title={t('tacticalBoard.tools.eraser', 'Borracha')}
           >
@@ -194,12 +235,15 @@ export default function TacticalBoardSidebar({
           {COLORS.map((c) => (
             <button
               key={c}
+              disabled={disabled}
               onClick={() => onSelectColor(c)}
               style={{ backgroundColor: c }}
               className={`h-6 w-6 rounded-full border transition-transform ${
-                activeColor === c
-                  ? 'ring-primary/60 scale-110 border-white ring-2'
-                  : 'border-outline-variant hover:scale-105'
+                disabled
+                  ? 'cursor-not-allowed opacity-30'
+                  : activeColor === c
+                    ? 'ring-primary/60 scale-110 border-white ring-2'
+                    : 'border-outline-variant hover:scale-105'
               }`}
               title={`Color: ${c}`}
             />
@@ -221,11 +265,15 @@ export default function TacticalBoardSidebar({
           <div className="flex items-center space-x-3">
             {/* Player T */}
             <div
-              draggable
-              onDragStart={(e) => onDragStartEntity(e, 'PLAYER_T')}
+              draggable={!disabled}
+              onDragStart={(e) => !disabled && onDragStartEntity(e, 'PLAYER_T')}
               onClick={() => handleEntityClick('PLAYER_T')}
-              className={`bg-primary-container flex h-9 w-9 cursor-grab items-center justify-center rounded-full font-bold text-black shadow-[0_0_10px_rgba(246,174,45,0.4)] transition-all hover:scale-110 active:cursor-grabbing ${
-                activeEntityTool === 'PLAYER_T' ? 'scale-110 ring-2 ring-white' : ''
+              className={`bg-primary-container flex h-9 w-9 items-center justify-center rounded-full font-bold text-black shadow-[0_0_10px_rgba(246,174,45,0.4)] transition-all ${
+                disabled
+                  ? 'cursor-not-allowed opacity-40'
+                  : activeEntityTool === 'PLAYER_T'
+                    ? 'scale-110 cursor-grab ring-2 ring-white active:cursor-grabbing'
+                    : 'cursor-grab hover:scale-110 active:cursor-grabbing'
               }`}
               title={t('tacticalBoard.entitiesList.PLAYER_T', 'Jogador TR')}
             >
@@ -234,11 +282,15 @@ export default function TacticalBoardSidebar({
 
             {/* Player CT */}
             <div
-              draggable
-              onDragStart={(e) => onDragStartEntity(e, 'PLAYER_CT')}
+              draggable={!disabled}
+              onDragStart={(e) => !disabled && onDragStartEntity(e, 'PLAYER_CT')}
               onClick={() => handleEntityClick('PLAYER_CT')}
-              className={`bg-secondary-container flex h-9 w-9 cursor-grab items-center justify-center rounded-full font-bold text-white shadow-[0_0_10px_rgba(1,100,180,0.4)] transition-all hover:scale-110 active:cursor-grabbing ${
-                activeEntityTool === 'PLAYER_CT' ? 'scale-110 ring-2 ring-white' : ''
+              className={`bg-secondary-container flex h-9 w-9 items-center justify-center rounded-full font-bold text-white shadow-[0_0_10px_rgba(1,100,180,0.4)] transition-all ${
+                disabled
+                  ? 'cursor-not-allowed opacity-40'
+                  : activeEntityTool === 'PLAYER_CT'
+                    ? 'scale-110 cursor-grab ring-2 ring-white active:cursor-grabbing'
+                    : 'cursor-grab hover:scale-110 active:cursor-grabbing'
               }`}
               title={t('tacticalBoard.entitiesList.PLAYER_CT', 'Jogador CT')}
             >
@@ -255,13 +307,15 @@ export default function TacticalBoardSidebar({
           <div className="grid grid-cols-5 gap-2">
             {/* Smoke */}
             <div
-              draggable
-              onDragStart={(e) => onDragStartEntity(e, 'SMOKE')}
+              draggable={!disabled}
+              onDragStart={(e) => !disabled && onDragStartEntity(e, 'SMOKE')}
               onClick={() => handleEntityClick('SMOKE')}
-              className={`bg-surface-container-high border-outline-variant hover:border-primary/50 flex h-10 w-10 cursor-grab items-center justify-center rounded-sm border p-1 transition-all hover:scale-105 active:cursor-grabbing ${
-                activeEntityTool === 'SMOKE'
-                  ? 'border-primary bg-primary/20 ring-primary ring-1'
-                  : ''
+              className={`bg-surface-container-high border-outline-variant flex h-10 w-10 items-center justify-center rounded-sm border p-1 transition-all ${
+                disabled
+                  ? 'cursor-not-allowed opacity-40'
+                  : activeEntityTool === 'SMOKE'
+                    ? 'border-primary bg-primary/20 ring-primary cursor-grab ring-1 active:cursor-grabbing'
+                    : 'hover:border-primary/50 cursor-grab hover:scale-105 active:cursor-grabbing'
               }`}
               title={t('tacticalBoard.entitiesList.SMOKE', 'Smoke')}
             >
@@ -270,13 +324,15 @@ export default function TacticalBoardSidebar({
 
             {/* Flash */}
             <div
-              draggable
-              onDragStart={(e) => onDragStartEntity(e, 'FLASH')}
+              draggable={!disabled}
+              onDragStart={(e) => !disabled && onDragStartEntity(e, 'FLASH')}
               onClick={() => handleEntityClick('FLASH')}
-              className={`bg-surface-container-high border-outline-variant hover:border-primary/50 flex h-10 w-10 cursor-grab items-center justify-center rounded-sm border p-1 transition-all hover:scale-105 active:cursor-grabbing ${
-                activeEntityTool === 'FLASH'
-                  ? 'border-primary bg-primary/20 ring-primary ring-1'
-                  : ''
+              className={`bg-surface-container-high border-outline-variant flex h-10 w-10 items-center justify-center rounded-sm border p-1 transition-all ${
+                disabled
+                  ? 'cursor-not-allowed opacity-40'
+                  : activeEntityTool === 'FLASH'
+                    ? 'border-primary bg-primary/20 ring-primary cursor-grab ring-1 active:cursor-grabbing'
+                    : 'hover:border-primary/50 cursor-grab hover:scale-105 active:cursor-grabbing'
               }`}
               title={t('tacticalBoard.entitiesList.FLASH', 'Flash')}
             >
@@ -285,13 +341,15 @@ export default function TacticalBoardSidebar({
 
             {/* Molotov */}
             <div
-              draggable
-              onDragStart={(e) => onDragStartEntity(e, 'MOLOTOV')}
+              draggable={!disabled}
+              onDragStart={(e) => !disabled && onDragStartEntity(e, 'MOLOTOV')}
               onClick={() => handleEntityClick('MOLOTOV')}
-              className={`bg-surface-container-high border-outline-variant hover:border-primary/50 flex h-10 w-10 cursor-grab items-center justify-center rounded-sm border p-1 transition-all hover:scale-105 active:cursor-grabbing ${
-                activeEntityTool === 'MOLOTOV'
-                  ? 'border-primary bg-primary/20 ring-primary ring-1'
-                  : ''
+              className={`bg-surface-container-high border-outline-variant flex h-10 w-10 items-center justify-center rounded-sm border p-1 transition-all ${
+                disabled
+                  ? 'cursor-not-allowed opacity-40'
+                  : activeEntityTool === 'MOLOTOV'
+                    ? 'border-primary bg-primary/20 ring-primary cursor-grab ring-1 active:cursor-grabbing'
+                    : 'hover:border-primary/50 cursor-grab hover:scale-105 active:cursor-grabbing'
               }`}
               title={t('tacticalBoard.entitiesList.MOLOTOV', 'Molotov')}
             >
@@ -302,13 +360,15 @@ export default function TacticalBoardSidebar({
 
             {/* HE Grenade */}
             <div
-              draggable
-              onDragStart={(e) => onDragStartEntity(e, 'HE_GRENADE')}
+              draggable={!disabled}
+              onDragStart={(e) => !disabled && onDragStartEntity(e, 'HE_GRENADE')}
               onClick={() => handleEntityClick('HE_GRENADE')}
-              className={`bg-surface-container-high border-outline-variant hover:border-primary/50 flex h-10 w-10 cursor-grab items-center justify-center rounded-sm border p-1 transition-all hover:scale-105 active:cursor-grabbing ${
-                activeEntityTool === 'HE_GRENADE'
-                  ? 'border-primary bg-primary/20 ring-primary ring-1'
-                  : ''
+              className={`bg-surface-container-high border-outline-variant flex h-10 w-10 items-center justify-center rounded-sm border p-1 transition-all ${
+                disabled
+                  ? 'cursor-not-allowed opacity-40'
+                  : activeEntityTool === 'HE_GRENADE'
+                    ? 'border-primary bg-primary/20 ring-primary cursor-grab ring-1 active:cursor-grabbing'
+                    : 'hover:border-primary/50 cursor-grab hover:scale-105 active:cursor-grabbing'
               }`}
               title={t('tacticalBoard.entitiesList.HE_GRENADE', 'Granada HE')}
             >
@@ -317,13 +377,15 @@ export default function TacticalBoardSidebar({
 
             {/* Bomb / C4 */}
             <div
-              draggable
-              onDragStart={(e) => onDragStartEntity(e, 'BOMB')}
+              draggable={!disabled}
+              onDragStart={(e) => !disabled && onDragStartEntity(e, 'BOMB')}
               onClick={() => handleEntityClick('BOMB')}
-              className={`bg-surface-container-high border-outline-variant hover:border-primary/50 flex h-10 w-10 cursor-grab items-center justify-center rounded-sm border p-1 transition-all hover:scale-105 active:cursor-grabbing ${
-                activeEntityTool === 'BOMB'
-                  ? 'border-primary bg-primary/20 ring-primary ring-1'
-                  : ''
+              className={`bg-surface-container border-outline-variant flex h-10 w-10 items-center justify-center rounded-sm border p-1 transition-all ${
+                disabled
+                  ? 'cursor-not-allowed opacity-40'
+                  : activeEntityTool === 'BOMB'
+                    ? 'border-primary bg-primary/20 ring-primary cursor-grab ring-1 active:cursor-grabbing'
+                    : 'hover:border-primary/50 cursor-grab hover:scale-105 active:cursor-grabbing'
               }`}
               title={t('tacticalBoard.entitiesList.BOMB', 'C4')}
             >
@@ -339,8 +401,8 @@ export default function TacticalBoardSidebar({
       <div className="mt-auto space-y-2 p-4">
         <button
           onClick={onUndo}
-          disabled={!canUndo}
-          className="bg-surface-container text-on-surface-variant border-outline-variant hover:text-on-surface hover:bg-surface-variant/50 font-data-label flex w-full items-center justify-center gap-2 rounded-sm border py-2 text-xs transition-all active:scale-95 disabled:opacity-40"
+          disabled={disabled || !canUndo}
+          className="bg-surface-container text-on-surface-variant border-outline-variant hover:text-on-surface hover:bg-surface-variant/50 font-data-label flex w-full items-center justify-center gap-2 rounded-sm border py-2 text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-[16px]">undo</span>
           {t('tacticalBoard.undo', 'Undo Last')}
@@ -348,7 +410,8 @@ export default function TacticalBoardSidebar({
 
         <button
           onClick={onClear}
-          className="bg-error-container/20 text-error hover:bg-error-container/40 border-error/30 font-data-label flex w-full items-center justify-center gap-2 rounded-sm border py-2 text-xs transition-all active:scale-95"
+          disabled={disabled}
+          className="bg-error-container/20 text-error hover:bg-error-container/40 border-error/30 font-data-label flex w-full items-center justify-center gap-2 rounded-sm border py-2 text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-[16px]">delete</span>
           {t('tacticalBoard.clear', 'Clear Board')}

@@ -26,13 +26,24 @@ export interface BoardEntity {
   side?: 'TERRORIST' | 'COUNTER-TERRORIST';
 }
 
+export const TIMELINE_TIMESTAMPS = [0, 20, 40, 60, 80, 100] as const;
+export type TimelineTimestamp = (typeof TIMELINE_TIMESTAMPS)[number];
+
+export interface StratFrame {
+  time: number; // 0, 20, 40, 60, 80, 100 (segundos decorridos no round)
+  entities: BoardEntity[];
+  paths: BoardPath[];
+}
+
 export interface StratPreset {
   id: string;
   title: string;
   mapId: string;
   description?: string;
-  paths: BoardPath[];
-  entities: BoardEntity[];
+  side?: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED';
+  paths?: BoardPath[];
+  entities?: BoardEntity[];
+  frames?: StratFrame[];
   createdAt?: string;
 }
 
@@ -42,6 +53,8 @@ export interface StratData {
   mapId: string;
   description?: string;
   side?: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED' | string;
+  frames?: StratFrame[];
+  // Campos legados mantidos para compatibilidade retroativa
   paths: BoardPath[];
   entities: BoardEntity[];
   authorId?: string;
@@ -56,8 +69,9 @@ export interface CreateStratDTO {
   mapId: string;
   description?: string;
   side?: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED' | string;
-  paths: BoardPath[];
-  entities: BoardEntity[];
+  frames?: StratFrame[];
+  paths?: BoardPath[];
+  entities?: BoardEntity[];
   authorId?: string;
   authorEmail?: string;
   isPublic?: boolean;
@@ -67,6 +81,7 @@ export interface UpdateStratDTO {
   title?: string;
   description?: string;
   side?: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED' | string;
+  frames?: StratFrame[];
   paths?: BoardPath[];
   entities?: BoardEntity[];
   isPublic?: boolean;

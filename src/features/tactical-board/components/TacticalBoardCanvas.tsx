@@ -481,7 +481,11 @@ export default function TacticalBoardCanvas({
                 left: `${entity.x}%`,
                 transform: 'translate(-50%, -50%)',
               }}
-              className={`absolute transition-transform ${
+              className={`absolute ${
+                draggingEntityId === entity.id
+                  ? 'transition-none'
+                  : 'transition-all duration-300 ease-out'
+              } ${
                 activeEntityTool
                   ? 'pointer-events-none'
                   : isHovered && activeTool === 'eraser'

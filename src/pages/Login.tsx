@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useTranslation } from 'react-i18next';
 import { auth } from '../lib/firebase';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -11,6 +11,12 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from =
+    (location.state as { from?: { pathname: string; search?: string } })?.from
+      ? `${(location.state as { from: { pathname: string; search?: string } }).from.pathname}${(location.state as { from: { pathname: string; search?: string } }).from.search || ''}`
+      : '/';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +25,7 @@ export default function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/'); // Redireciona para a home após o login
+      navigate(from, { replace: true });
     } catch (err: unknown) {
       setError(t('auth.invalidCredentials'));
       console.error(err);
@@ -91,7 +97,7 @@ export default function Login() {
 
         <p className="font-data-label text-on-surface-variant mt-6 text-center text-xs">
           {t('auth.noAccount')}{' '}
-          <Link to="/register" className="text-primary hover:underline">
+          <Link to="/register" state={location.state} className="text-primary hover:underline">
             {t('auth.registerHere')}
           </Link>
         </p>

@@ -1,36 +1,47 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/hooks/useAuth';
-import type { BoardPath, BoardEntity } from '../types';
+import type { BoardPath, BoardEntity, StratFrame } from '../types';
 import { createStrat, updateStrat } from '../services/stratsService';
 
 interface SaveStratModalProps {
   mapId: string;
   stratTitle: string;
-  paths: BoardPath[];
-  entities: BoardEntity[];
+  stratDescription?: string;
+  stratSide?: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED';
+  frames?: StratFrame[];
+  paths?: BoardPath[];
+  entities?: BoardEntity[];
   loadedStratId: string | null;
   onClose: () => void;
-  onSuccess: (savedTitle: string, stratId: string) => void;
+  onSuccess: (
+    savedTitle: string,
+    savedDescription: string,
+    savedSide: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED',
+    stratId: string
+  ) => void;
 }
 
 export default function SaveStratModal({
   mapId,
   stratTitle,
-  paths,
-  entities,
+  stratDescription = '',
+  stratSide = 'MIXED',
+  frames = [],
+  paths = [],
+  entities = [],
   loadedStratId,
   onClose,
   onSuccess,
 }: SaveStratModalProps) {
   const { t } = useTranslation();
-  const { user, role } = useAuth();
+  const { user } = useAuth();
 
-  const canSave = role === 'CREATOR' || role === 'ADMIN';
+  const canSave = Boolean(user);
 
   const [title, setTitle] = useState(stratTitle || '');
-  const [description, setDescription] = useState('');
-  const [side, setSide] = useState<'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED'>('MIXED');
+  const [description, setDescription] = useState(stratDescription || '');
+  const [side, setSide] = useState<'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED'>(stratSide);
   const [saveAsNew, setSaveAsNew] = useState(!loadedStratId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +54,7 @@ export default function SaveStratModal({
     }
 
     if (!canSave) {
-      setError(t('tacticalBoard.needCreatorRole'));
+      setError(t('tacticalBoard.needAuth'));
       return;
     }
 
@@ -57,24 +68,26 @@ export default function SaveStratModal({
           title: title.trim().toUpperCase(),
           description: description.trim(),
           side,
+          frames,
           paths,
           entities,
         });
-        onSuccess(title.trim().toUpperCase(), loadedStratId);
+        onSuccess(title.trim().toUpperCase(), description.trim(), side, loadedStratId);
       } else {
-        // Criar nova estratégia
+        // Criar nova estratégia vinculada ao usuário atual
         const newId = await createStrat({
           title: title.trim().toUpperCase(),
           mapId,
           description: description.trim(),
           side,
+          frames,
           paths,
           entities,
           authorId: user?.uid || '',
           authorEmail: user?.email || '',
           isPublic: true,
         });
-        onSuccess(title.trim().toUpperCase(), newId);
+        onSuccess(title.trim().toUpperCase(), description.trim(), side, newId);
       }
     } catch (err: unknown) {
       console.error('Erro ao salvar estratégia:', err);
@@ -105,20 +118,15 @@ export default function SaveStratModal({
           </button>
         </div>
 
-        {/* Aviso se o usuário não tem permissão CREATOR / ADMIN */}
+        {/* Aviso se o usuário não está autenticado */}
         {!canSave && (
           <div className="mt-4 flex items-center gap-2 rounded border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-300">
             <span className="material-symbols-outlined text-base">lock</span>
             <span>
-              {!user
-                ? t(
-                    'tacticalBoard.needAuth',
-                    'Você precisa estar autenticado como CREATOR ou ADMIN para salvar na nuvem.'
-                  )
-                : t(
-                    'tacticalBoard.needCreatorRole',
-                    'Permissão insuficiente: apenas CREATOR ou ADMIN podem publicar na nuvem.'
-                  )}
+              {t(
+                'tacticalBoard.needAuth',
+                'Você precisa estar autenticado para salvar táticas na nuvem.'
+              )}
             </span>
           </div>
         )}
