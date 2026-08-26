@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import {
   useTacticalBoard,
   TacticalBoardSidebar,
   TacticalBoardCanvas,
   TacticalBoardToolbar,
+  TacticalBoardTimeline,
   TacticalBoardStatusBar,
+  TacticalBoardAuthLock,
   SaveStratModal,
 } from '../features/tactical-board';
 
 export default function TacticsBoard() {
   const { mapId } = useParams<{ mapId?: string }>();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  const isAuthenticated = Boolean(user);
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -20,8 +25,13 @@ export default function TacticsBoard() {
     currentMap,
     stratTitle,
     setStratTitle,
+    stratDescription,
+    stratSide,
     paths,
     entities,
+    allFramesList,
+    currentTime,
+    isPlaying,
     cloudStrats,
     loadedStratId,
     isSaveModalOpen,
@@ -46,6 +56,12 @@ export default function TacticsBoard() {
     handleRemoveEntity,
     handleUndo,
     handleClear,
+    handleClearCurrentFrame,
+    handleCopyFrameToNext,
+    handleSetCurrentTime,
+    handleNextTime,
+    handlePrevTime,
+    handleTogglePlay,
     handleSelectMap,
     handleSelectPreset,
     handleSelectCloudStrat,
@@ -59,6 +75,7 @@ export default function TacticsBoard() {
     handleResetZoom,
   } = useTacticalBoard({
     initialMapId: mapId || 'mirage',
+    userId: user?.uid,
     onMapChange: (newMapId) => {
       navigate(`/strat-board/${newMapId}`, { replace: true });
     },
@@ -66,17 +83,33 @@ export default function TacticsBoard() {
 
   // Atalhos de Teclado
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      const isInputActive = ['INPUT', 'TEXTAREA'].includes(
+        (e.target as HTMLElement)?.tagName
+      );
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         handleUndo();
       } else if (e.key === 'Escape') {
         setActiveEntityTool(null);
+        setActiveTool('select');
+      } else if ((e.key === 'v' || e.key === 'V') && !isInputActive) {
+        setActiveEntityTool(null);
+        setActiveTool('select');
+      } else if (e.key === 'ArrowLeft' && !isInputActive && !e.altKey && !e.ctrlKey) {
+        e.preventDefault();
+        handlePrevTime();
+      } else if (e.key === 'ArrowRight' && !isInputActive && !e.altKey && !e.ctrlKey) {
+        e.preventDefault();
+        handleNextTime();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, setActiveEntityTool]);
+  }, [isAuthenticated, handleUndo, setActiveEntityTool, setActiveTool, handlePrevTime, handleNextTime]);
 
   return (
     <div className="bg-background fixed top-16 left-0 z-30 flex h-[calc(100vh-64px)] w-full overflow-hidden">
@@ -88,10 +121,14 @@ export default function TacticsBoard() {
       )}
 
       {/* Modal de Salvar Estratégia no Firestore */}
-      {isSaveModalOpen && (
+      {isSaveModalOpen && isAuthenticated && (
         <SaveStratModal
+          key={loadedStratId || 'new-strat'}
           mapId={selectedMapId}
           stratTitle={stratTitle}
+          stratDescription={stratDescription}
+          stratSide={stratSide}
+          frames={allFramesList}
           paths={paths}
           entities={entities}
           loadedStratId={loadedStratId}
@@ -132,6 +169,7 @@ export default function TacticsBoard() {
               onUndo={handleUndo}
               onClear={handleClear}
               canUndo={canUndo}
+              disabled={!isAuthenticated}
             />
           </div>
         </div>
@@ -153,6 +191,7 @@ export default function TacticsBoard() {
         onUndo={handleUndo}
         onClear={handleClear}
         canUndo={canUndo}
+        disabled={!isAuthenticated}
       />
 
       {/* Área Central do Canvas */}
@@ -168,28 +207,59 @@ export default function TacticsBoard() {
           loadedStratId={loadedStratId}
           onSaveStrat={handleOpenSaveModal}
           onExportJson={handleExportJson}
+          disabled={!isAuthenticated}
         />
 
-        {/* Viewport Interativo com Radar */}
-        <TacticalBoardCanvas
-          radarImage={currentMap.radarImage}
-          paths={paths}
-          entities={entities}
-          activeTool={activeTool}
-          activeColor={activeColor}
-          isDashed={isDashed}
-          activeEntityTool={activeEntityTool}
-          onAddPath={handleAddPath}
-          onRemovePath={handleRemovePath}
-          onAddEntity={handleAddEntity}
-          onUpdateEntity={handleUpdateEntity}
-          onRemoveEntity={handleRemoveEntity}
-          onCursorMove={setCursorCoords}
-          zoom={zoom}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onResetZoom={handleResetZoom}
-        />
+        {/* Viewport Interativo com Radar ou Bloqueio Tático */}
+        <div className="relative flex flex-1 overflow-hidden">
+          {loading ? (
+            <div className="flex h-full w-full flex-1 items-center justify-center">
+              <span className="material-symbols-outlined text-primary animate-spin text-4xl">
+                progress_activity
+              </span>
+            </div>
+          ) : !isAuthenticated ? (
+            <TacticalBoardAuthLock
+              radarImage={currentMap.radarImage}
+              mapName={currentMap.name}
+            />
+          ) : (
+            <>
+              <TacticalBoardCanvas
+                radarImage={currentMap.radarImage}
+                paths={paths}
+                entities={entities}
+                activeTool={activeTool}
+                activeColor={activeColor}
+                isDashed={isDashed}
+                activeEntityTool={activeEntityTool}
+                onAddPath={handleAddPath}
+                onRemovePath={handleRemovePath}
+                onAddEntity={handleAddEntity}
+                onUpdateEntity={handleUpdateEntity}
+                onRemoveEntity={handleRemoveEntity}
+                onCursorMove={setCursorCoords}
+                zoom={zoom}
+                onZoomIn={handleZoomIn}
+                onZoomOut={handleZoomOut}
+                onResetZoom={handleResetZoom}
+              />
+
+              {/* Linha do Tempo Tática Flutuante Minimalista */}
+              <TacticalBoardTimeline
+                currentTime={currentTime}
+                isPlaying={isPlaying}
+                framesList={allFramesList}
+                onSetTime={handleSetCurrentTime}
+                onNextTime={handleNextTime}
+                onPrevTime={handlePrevTime}
+                onTogglePlay={handleTogglePlay}
+                onCopyFrameToNext={handleCopyFrameToNext}
+                onClearCurrentFrame={handleClearCurrentFrame}
+              />
+            </>
+          )}
+        </div>
 
         {/* Barra de Status Inferior HUD */}
         <TacticalBoardStatusBar
@@ -200,6 +270,7 @@ export default function TacticsBoard() {
           stratTitle={stratTitle}
           entitiesCount={entities.length}
           pathsCount={paths.length}
+          currentTime={currentTime}
         />
       </section>
     </div>

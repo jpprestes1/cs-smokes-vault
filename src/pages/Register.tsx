@@ -3,7 +3,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useTranslation } from 'react-i18next';
 import { auth } from '../lib/firebase';
 import { createUserProfile } from '../features/auth/services/usersService';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Register() {
   const { t } = useTranslation();
@@ -13,6 +13,12 @@ export default function Register() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from =
+    (location.state as { from?: { pathname: string; search?: string } })?.from
+      ? `${(location.state as { from: { pathname: string; search?: string } }).from.pathname}${(location.state as { from: { pathname: string; search?: string } }).from.search || ''}`
+      : '/';
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +46,7 @@ export default function Register() {
         'PLAYER'
       );
 
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : t('auth.createAccountFailed');
       setError(errorMessage || t('auth.createAccountFailed'));
@@ -129,7 +135,7 @@ export default function Register() {
 
         <p className="font-data-label text-on-surface-variant mt-6 text-center text-xs">
           {t('auth.hasAccount')}{' '}
-          <Link to="/login" className="text-primary hover:underline">
+          <Link to="/login" state={location.state} className="text-primary hover:underline">
             {t('auth.login')}
           </Link>
         </p>
