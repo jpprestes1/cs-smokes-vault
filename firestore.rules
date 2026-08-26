@@ -18,6 +18,11 @@ service cloud.firestore {
       return hasUserDoc() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : 'PLAYER';
     }
     
+    // Helper: Verifica se o usuário é CREATOR
+    function isCreator() {
+      return isAuthenticated() && getUserRole() == 'CREATOR';
+    }
+
     // Helper: Verifica se o usuário é ADMIN ou CREATOR
     function isCreatorOrAdmin() {
       return isAuthenticated() && (getUserRole() == 'CREATOR' || getUserRole() == 'ADMIN');
@@ -40,10 +45,37 @@ service cloud.firestore {
       allow create, update, delete: if isCreatorOrAdmin();
     }
 
-    // Coleção de Estratégias do Tactical Board (leitura pública, escrita para CREATOR e ADMIN)
+    // Coleção de Estratégias do Tactical Board
     match /strats/{stratId} {
       allow read: if true;
-      allow create, update, delete: if isCreatorOrAdmin();
+      
+      // Criação:
+      // - ADMIN pode criar qualquer tática
+      // - CREATOR pode criar táticas públicas ou privadas vinculadas ao seu UID
+      // - PLAYER (cliente normal) pode criar táticas vinculadas ao seu UID apenas como privadas (isPublic == false)
+      allow create: if isAuthenticated() && (
+        isAdmin() ||
+        (isCreator() && request.resource.data.authorId == request.auth.uid) ||
+        (request.resource.data.authorId == request.auth.uid && request.resource.data.isPublic == false)
+      );
+      
+      // Edição:
+      // - ADMIN pode editar qualquer tática
+      // - CREATOR só pode editar as táticas dele próprio
+      // - PLAYER só pode editar as táticas dele próprio mantendo como privada
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (isCreator() && resource.data.authorId == request.auth.uid && request.resource.data.authorId == request.auth.uid) ||
+        (resource.data.authorId == request.auth.uid && request.resource.data.authorId == request.auth.uid && request.resource.data.isPublic == false)
+      );
+      
+      // Exclusão:
+      // - ADMIN pode excluir qualquer tática
+      // - O próprio autor pode excluir suas próprias táticas
+      allow delete: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.authorId == request.auth.uid
+      );
     }
 
     // Coleção de Usuários
