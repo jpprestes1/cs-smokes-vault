@@ -220,6 +220,10 @@ const es = {
     needCreatorRole:
       'Permisos insuficientes: solo agentes con rol CREATOR o ADMIN pueden guardar tacticas en la nube.',
     needAuth: 'Debes estar autenticado para guardar tacticas en la nube.',
+    authRequiredTitle: 'ACCESO RESTRINGIDO // AGENTE NO AUTENTICADO',
+    authRequiredDesc:
+      'El Strat Board es una herramienta tactica avanzada para dibujar, simular rondas y crear estrategias. Inicia sesion o registrate para acceder al tablero interactivo y guardar tus tacticas.',
+    authLockedStatus: 'ACCESO BLOQUEADO',
     zoomIn: 'Aumentar Zoom',
     zoomOut: 'Reducir Zoom',
     resetZoom: 'Restablecer Zoom',

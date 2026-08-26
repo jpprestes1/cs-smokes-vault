@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import {
   useTacticalBoard,
   TacticalBoardSidebar,
@@ -7,12 +8,15 @@ import {
   TacticalBoardToolbar,
   TacticalBoardTimeline,
   TacticalBoardStatusBar,
+  TacticalBoardAuthLock,
   SaveStratModal,
 } from '../features/tactical-board';
 
 export default function TacticsBoard() {
   const { mapId } = useParams<{ mapId?: string }>();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  const isAuthenticated = Boolean(user);
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -76,6 +80,8 @@ export default function TacticsBoard() {
 
   // Atalhos de Teclado
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       const isInputActive = ['INPUT', 'TEXTAREA'].includes(
         (e.target as HTMLElement)?.tagName
@@ -100,7 +106,7 @@ export default function TacticsBoard() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, setActiveEntityTool, setActiveTool, handlePrevTime, handleNextTime]);
+  }, [isAuthenticated, handleUndo, setActiveEntityTool, setActiveTool, handlePrevTime, handleNextTime]);
 
   return (
     <div className="bg-background fixed top-16 left-0 z-30 flex h-[calc(100vh-64px)] w-full overflow-hidden">
@@ -112,7 +118,7 @@ export default function TacticsBoard() {
       )}
 
       {/* Modal de Salvar Estratégia no Firestore */}
-      {isSaveModalOpen && (
+      {isSaveModalOpen && isAuthenticated && (
         <SaveStratModal
           mapId={selectedMapId}
           stratTitle={stratTitle}
@@ -157,6 +163,7 @@ export default function TacticsBoard() {
               onUndo={handleUndo}
               onClear={handleClear}
               canUndo={canUndo}
+              disabled={!isAuthenticated}
             />
           </div>
         </div>
@@ -178,6 +185,7 @@ export default function TacticsBoard() {
         onUndo={handleUndo}
         onClear={handleClear}
         canUndo={canUndo}
+        disabled={!isAuthenticated}
       />
 
       {/* Área Central do Canvas */}
@@ -193,42 +201,58 @@ export default function TacticsBoard() {
           loadedStratId={loadedStratId}
           onSaveStrat={handleOpenSaveModal}
           onExportJson={handleExportJson}
+          disabled={!isAuthenticated}
         />
 
-        {/* Viewport Interativo com Radar */}
+        {/* Viewport Interativo com Radar ou Bloqueio Tático */}
         <div className="relative flex flex-1 overflow-hidden">
-          <TacticalBoardCanvas
-            radarImage={currentMap.radarImage}
-            paths={paths}
-            entities={entities}
-            activeTool={activeTool}
-            activeColor={activeColor}
-            isDashed={isDashed}
-            activeEntityTool={activeEntityTool}
-            onAddPath={handleAddPath}
-            onRemovePath={handleRemovePath}
-            onAddEntity={handleAddEntity}
-            onUpdateEntity={handleUpdateEntity}
-            onRemoveEntity={handleRemoveEntity}
-            onCursorMove={setCursorCoords}
-            zoom={zoom}
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-            onResetZoom={handleResetZoom}
-          />
+          {loading ? (
+            <div className="flex h-full w-full flex-1 items-center justify-center">
+              <span className="material-symbols-outlined text-primary animate-spin text-4xl">
+                progress_activity
+              </span>
+            </div>
+          ) : !isAuthenticated ? (
+            <TacticalBoardAuthLock
+              radarImage={currentMap.radarImage}
+              mapName={currentMap.name}
+            />
+          ) : (
+            <>
+              <TacticalBoardCanvas
+                radarImage={currentMap.radarImage}
+                paths={paths}
+                entities={entities}
+                activeTool={activeTool}
+                activeColor={activeColor}
+                isDashed={isDashed}
+                activeEntityTool={activeEntityTool}
+                onAddPath={handleAddPath}
+                onRemovePath={handleRemovePath}
+                onAddEntity={handleAddEntity}
+                onUpdateEntity={handleUpdateEntity}
+                onRemoveEntity={handleRemoveEntity}
+                onCursorMove={setCursorCoords}
+                zoom={zoom}
+                onZoomIn={handleZoomIn}
+                onZoomOut={handleZoomOut}
+                onResetZoom={handleResetZoom}
+              />
 
-          {/* Linha do Tempo Tática Flutuante Minimalista */}
-          <TacticalBoardTimeline
-            currentTime={currentTime}
-            isPlaying={isPlaying}
-            framesList={allFramesList}
-            onSetTime={handleSetCurrentTime}
-            onNextTime={handleNextTime}
-            onPrevTime={handlePrevTime}
-            onTogglePlay={handleTogglePlay}
-            onCopyFrameToNext={handleCopyFrameToNext}
-            onClearCurrentFrame={handleClearCurrentFrame}
-          />
+              {/* Linha do Tempo Tática Flutuante Minimalista */}
+              <TacticalBoardTimeline
+                currentTime={currentTime}
+                isPlaying={isPlaying}
+                framesList={allFramesList}
+                onSetTime={handleSetCurrentTime}
+                onNextTime={handleNextTime}
+                onPrevTime={handlePrevTime}
+                onTogglePlay={handleTogglePlay}
+                onCopyFrameToNext={handleCopyFrameToNext}
+                onClearCurrentFrame={handleClearCurrentFrame}
+              />
+            </>
+          )}
         </div>
 
         {/* Barra de Status Inferior HUD */}

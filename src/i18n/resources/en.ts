@@ -218,6 +218,10 @@ const en = {
     needCreatorRole:
       'Insufficient permissions: only CREATOR or ADMIN operatives can save tactics to the cloud.',
     needAuth: 'You must be authenticated to save tactics to the cloud.',
+    authRequiredTitle: 'RESTRICTED ACCESS // UNAUTHENTICATED OPERATIVE',
+    authRequiredDesc:
+      'The Strat Board is an advanced tactical tool for drawing, round simulation, and strategy design. Log in or register to access the interactive board and save your playbooks.',
+    authLockedStatus: 'ACCESS LOCKED',
     zoomIn: 'Zoom In',
     zoomOut: 'Zoom Out',
     resetZoom: 'Reset Zoom',

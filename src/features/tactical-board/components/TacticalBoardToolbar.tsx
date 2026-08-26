@@ -13,6 +13,7 @@ interface TacticalBoardToolbarProps {
   loadedStratId?: string | null;
   onSaveStrat: () => void;
   onExportJson: () => void;
+  disabled?: boolean;
 }
 
 export default function TacticalBoardToolbar({
@@ -25,6 +26,7 @@ export default function TacticalBoardToolbar({
   loadedStratId,
   onSaveStrat,
   onExportJson,
+  disabled = false,
 }: TacticalBoardToolbarProps) {
   const { t } = useTranslation();
   const [isPresetsOpen, setIsPresetsOpen] = useState(false);
@@ -41,15 +43,22 @@ export default function TacticalBoardToolbar({
   return (
     <div className="absolute top-4 right-4 z-30 flex flex-wrap items-center gap-2">
       {/* Título da Strat */}
-      <div className="bg-surface-container-high/80 border-outline-variant glass-panel flex items-center rounded-sm border px-3 py-1.5 backdrop-blur-md">
+      <div
+        className={`bg-surface-container-high/80 border-outline-variant glass-panel flex items-center rounded-sm border px-3 py-1.5 backdrop-blur-md ${
+          disabled ? 'opacity-40 select-none' : ''
+        }`}
+      >
         <span className="font-data-label text-outline-variant mr-2 text-[10px] uppercase">
           STRAT:
         </span>
         <input
           type="text"
+          disabled={disabled}
           value={stratTitle}
           onChange={(e) => onChangeTitle(e.target.value.toUpperCase())}
-          className="font-data-label text-primary placeholder-on-surface-variant/40 w-36 bg-transparent text-xs font-bold uppercase outline-none focus:ring-0 sm:w-48"
+          className={`font-data-label text-primary placeholder-on-surface-variant/40 w-36 bg-transparent text-xs font-bold uppercase outline-none focus:ring-0 sm:w-48 ${
+            disabled ? 'cursor-not-allowed' : ''
+          }`}
           placeholder="UNTITLED_STRAT"
         />
         {loadedStratId && (
@@ -62,8 +71,13 @@ export default function TacticalBoardToolbar({
       {/* Menu de Presets / Estratégias na Nuvem */}
       <div className="relative">
         <button
+          disabled={disabled}
           onClick={() => setIsPresetsOpen(!isPresetsOpen)}
-          className="bg-surface-container-high/80 border-outline-variant hover:border-primary text-on-surface glass-panel font-data-label flex items-center gap-1.5 rounded-sm border px-3 py-2 text-xs backdrop-blur-md transition-colors active:scale-95"
+          className={`bg-surface-container-high/80 border-outline-variant text-on-surface glass-panel font-data-label flex items-center gap-1.5 rounded-sm border px-3 py-2 text-xs backdrop-blur-md transition-colors ${
+            disabled
+              ? 'cursor-not-allowed opacity-40'
+              : 'hover:border-primary active:scale-95'
+          }`}
         >
           <span className="material-symbols-outlined text-[16px]">folder_open</span>
           <span className="hidden sm:inline">
@@ -73,7 +87,7 @@ export default function TacticalBoardToolbar({
           <span className="material-symbols-outlined text-sm">expand_more</span>
         </button>
 
-        {isPresetsOpen && (
+        {isPresetsOpen && !disabled && (
           <div className="bg-surface-container-highest glass-panel animate-in fade-in zoom-in-95 absolute top-full right-0 z-50 mt-1 max-h-[420px] w-72 overflow-y-auto rounded-sm border border-white/10 p-1 shadow-2xl backdrop-blur-xl duration-150">
             {/* Seção Nuvem (Firestore) */}
             <div className="font-data-label text-primary flex items-center justify-between border-b border-white/5 px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase">
@@ -170,8 +184,13 @@ export default function TacticalBoardToolbar({
 
       {/* Botão Salvar Strat */}
       <button
+        disabled={disabled}
         onClick={onSaveStrat}
-        className="bg-surface-container-high/80 border-outline-variant hover:border-primary text-on-surface glass-panel font-data-label flex items-center gap-1.5 rounded-sm border px-3 py-2 text-xs shadow-lg backdrop-blur-md transition-colors active:scale-95"
+        className={`bg-surface-container-high/80 border-outline-variant text-on-surface glass-panel font-data-label flex items-center gap-1.5 rounded-sm border px-3 py-2 text-xs shadow-lg backdrop-blur-md transition-colors ${
+          disabled
+            ? 'cursor-not-allowed opacity-40'
+            : 'hover:border-primary active:scale-95'
+        }`}
         title="Salvar Estratégia na Nuvem (Firestore)"
       >
         <span className="material-symbols-outlined text-primary text-[16px]">cloud_upload</span>
@@ -180,8 +199,13 @@ export default function TacticalBoardToolbar({
 
       {/* Botão Exportar JSON */}
       <button
+        disabled={disabled}
         onClick={onExportJson}
-        className="bg-surface-container-high/80 border-outline-variant hover:border-primary text-on-surface glass-panel font-data-label flex items-center gap-1.5 rounded-sm border px-2.5 py-2 text-xs shadow-lg backdrop-blur-md transition-colors active:scale-95"
+        className={`bg-surface-container-high/80 border-outline-variant text-on-surface glass-panel font-data-label flex items-center gap-1.5 rounded-sm border px-2.5 py-2 text-xs shadow-lg backdrop-blur-md transition-colors ${
+          disabled
+            ? 'cursor-not-allowed opacity-40'
+            : 'hover:border-primary active:scale-95'
+        }`}
         title="Export Strategy JSON"
       >
         <span className="material-symbols-outlined text-[16px]">download</span>
