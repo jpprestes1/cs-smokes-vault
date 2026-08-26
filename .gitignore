@@ -25,6 +25,5 @@ dist-ssr
 .env
 *.exe
 
-# Firebase
 firestore.rules
-.firebaserc
+.firebaserc

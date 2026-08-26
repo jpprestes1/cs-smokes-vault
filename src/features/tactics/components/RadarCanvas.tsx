@@ -1,5 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type MarkerData, type VideoData } from '../types';
+import { usePanZoom } from '../../../hooks/usePanZoom';
+import TacticalMarker from './TacticalMarker';
 
 interface RadarCanvasProps {
   mapId?: string;
@@ -8,11 +11,18 @@ interface RadarCanvasProps {
   coords: { x: number; y: number };
   setCoords: (coords: { x: number; y: number }) => void;
   selectedMarkerId?: string;
-  onMarkerClick: (marker: MarkerData, e: React.MouseEvent) => void;
+  selectedGroupPos?: { x: number; y: number } | null;
+  onMarkerGroupClick: (group: MarkerData[], e: React.MouseEvent) => void;
   onMapClick: () => void;
   hoveredVideo?: VideoData | null;
   isPanelOpen?: boolean;
+  isLoading?: boolean;
 }
+
+const formatCoord = (coord: string | number) => {
+  const strCoord = String(coord);
+  return strCoord.endsWith('%') ? strCoord : `${strCoord}%`;
+};
 
 export default function RadarCanvas({
   mapId,
@@ -21,80 +31,38 @@ export default function RadarCanvas({
   coords,
   setCoords,
   selectedMarkerId,
-  onMarkerClick,
+  selectedGroupPos,
+  onMarkerGroupClick,
   onMapClick,
   hoveredVideo,
   isPanelOpen,
+  isLoading,
 }: RadarCanvasProps) {
-  const [zoom, setZoom] = useState(1);
+  const { t } = useTranslation();
+  const {
+    zoom,
+    scrollRef,
+    isDragging,
+    handleZoomIn,
+    handleZoomOut,
+    handleMouseDown,
+    handleMouseUpOrLeave,
+    handleContainerMouseMove,
+    handleInnerMouseMove,
+  } = usePanZoom(setCoords);
 
-  // Estados para o Drag-to-Pan (Arrastar o mapa)
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [scrollPos, setScrollPos] = useState({ left: 0, top: 0 });
+  const activeMarker = markers.find((m) => m.id === selectedMarkerId);
 
-  const handleZoomIn = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom((prev) => Math.min(prev + 0.25, 1.5));
-  };
-
-  const handleZoomOut = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom((prev) => Math.max(prev - 0.25, 1));
-  };
-
-  // Funções de Drag-to-Pan
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollRef.current) return;
-    setIsDragging(true);
-    setDragStart({
-      x: e.pageX - scrollRef.current.offsetLeft,
-      y: e.pageY - scrollRef.current.offsetTop,
+  // Lógica de agrupamento por coordenada com proteção de tipagem
+  const groupedMarkers = useMemo(() => {
+    const groups: Record<string, MarkerData[]> = {};
+    markers.forEach((m) => {
+      const key = `${Math.round(Number(m.x))},${Math.round(Number(m.y))}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(m);
     });
-    setScrollPos({
-      left: scrollRef.current.scrollLeft,
-      top: scrollRef.current.scrollTop,
-    });
-  };
-
-  const handleMouseUpOrLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleContainerMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const y = e.pageY - scrollRef.current.offsetTop;
-    const walkX = x - dragStart.x;
-    const walkY = y - dragStart.y;
-    scrollRef.current.scrollLeft = scrollPos.left - walkX;
-    scrollRef.current.scrollTop = scrollPos.top - walkY;
-  };
-
-  // Captura de coordenadas em porcentagem
-  const handleInnerMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const xPercent = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-    const yPercent = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-    setCoords({
-      x: Math.max(0, Math.min(100, xPercent)),
-      y: Math.max(0, Math.min(100, yPercent)),
-    });
-  };
-
-  const getMarkerStyles = (side: string, isSelected: boolean) => {
-    const isCT = side === 'COUNTER-TERRORIST';
-    if (isSelected) {
-      return isCT
-        ? 'border-secondary text-secondary scale-110 shadow-[0_0_25px_5px_rgba(164,201,255,0.5)] z-30'
-        : 'border-primary text-primary scale-110 shadow-[0_0_25px_5px_rgba(246,174,45,0.5)] z-30';
-    }
-    return isCT
-      ? 'border-secondary/60 text-secondary/80 hover:scale-110 hover:border-secondary hover:text-secondary shadow-[0_0_15px_rgba(164,201,255,0.2)] hover:shadow-[0_0_15px_rgba(164,201,255,0.6)] z-10'
-      : 'border-primary/60 text-primary/80 hover:scale-110 hover:border-primary hover:text-primary shadow-[0_0_15px_rgba(246,174,45,0.2)] hover:shadow-[0_0_15px_rgba(246,174,45,0.6)] z-10';
-  };
+    return Object.values(groups);
+  }, [markers]);
 
   return (
     <main
@@ -104,19 +72,25 @@ export default function RadarCanvas({
       onClick={onMapClick}
     >
       <div className="radar-grid pointer-events-none absolute inset-0 opacity-30"></div>
-
       <div className="pointer-events-none absolute top-6 left-6 z-20 flex flex-col gap-2">
-        <div className="bg-surface-container/90 text-primary font-data-label text-data-label rounded-sm border border-white/10 px-3 py-1 uppercase backdrop-blur">
-          MAP // {mapId?.toUpperCase()}
+        <div className="flex items-center gap-2">
+          <div className="bg-surface-container/90 text-primary font-data-label text-data-label rounded-sm border border-white/10 px-3 py-1 uppercase backdrop-blur">
+            {t('tactics.mapLabel')} // {mapId?.toUpperCase()}
+          </div>
+          {isLoading && (
+            <div className="tactical-shimmer bg-surface-container/90 border-primary-container/30 text-primary-container font-data-label text-data-label flex items-center gap-1.5 rounded-sm border px-2.5 py-1 tracking-wider uppercase backdrop-blur">
+              <span className="bg-primary-container h-1.5 w-1.5 animate-ping rounded-full" />
+              <span>{t('tactics.scanningTacticalData')}</span>
+            </div>
+          )}
         </div>
         <div className="font-data-label text-on-surface-variant text-xs">
-          COORD:{' '}
+          {t('tactics.coordLabel')}:{' '}
           <span className="font-mono">
             X:{String(coords.x).padStart(2, '0')} Y:{String(coords.y).padStart(2, '0')}
           </span>
         </div>
       </div>
-
       <div className="border-outline-variant relative aspect-square w-full max-w-[min(95vw,75vh)] overflow-hidden rounded-lg border shadow-2xl lg:max-w-[600px]">
         <div
           ref={scrollRef}
@@ -124,7 +98,9 @@ export default function RadarCanvas({
           onMouseUp={handleMouseUpOrLeave}
           onMouseLeave={handleMouseUpOrLeave}
           onMouseMove={handleContainerMouseMove}
-          className={`bg-surface-container hide-scrollbar h-full w-full overflow-auto ${isDragging ? 'cursor-grabbing' : 'cursor-crosshair'}`}
+          className={`bg-surface-container hide-scrollbar h-full w-full overflow-auto ${
+            isDragging ? 'cursor-grabbing' : 'cursor-crosshair'
+          }`}
         >
           <div
             className="relative aspect-square transition-all duration-300 ease-out"
@@ -136,46 +112,81 @@ export default function RadarCanvas({
               style={{ backgroundImage: `url('${radarImage}')` }}
             ></div>
 
-            {markers.map((marker) => {
-              const isSelected = selectedMarkerId === marker.id;
-              const formatCoord = (coord: string | number) => {
-                const strCoord = String(coord);
-                return strCoord.endsWith('%') ? strCoord : `${strCoord}%`;
-              };
+            {/* Linha animada simulando a trajetória da granada */}
+            {activeMarker && hoveredVideo && hoveredVideo.throwX && hoveredVideo.throwY && (
+              <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full">
+                <line
+                  x1={formatCoord(hoveredVideo.throwX)}
+                  y1={formatCoord(hoveredVideo.throwY)}
+                  x2={formatCoord(activeMarker.x)}
+                  y2={formatCoord(activeMarker.y)}
+                  stroke={
+                    activeMarker.side === 'COUNTER-TERRORIST'
+                      ? 'rgba(164,201,255,0.6)'
+                      : 'rgba(246,174,45,0.6)'
+                  }
+                  strokeWidth="2"
+                  strokeDasharray="6 4"
+                  className="animate-dash-flow"
+                />
+              </svg>
+            )}
+
+            {/* Marcadores de Táticas Agrupados */}
+            {groupedMarkers.map((group, idx) => {
+              // Verifica se a granada selecionada no painel pertence a este grupo
+              const selectedInGroup = selectedMarkerId
+                ? group.find((m) => m.id === selectedMarkerId)
+                : null;
+
+              // Se tiver uma selecionada, força a exibição para ser única (count=1), senão mostra o total do grupo
+              const count = selectedInGroup ? 1 : group.length;
+
+              // Define qual granada ditará o ícone (a selecionada ou a primeira do grupo)
+              const displayMarker = selectedInGroup || group[0];
+
+              const hasT = group.some((m) => m.side === 'TERRORIST');
+              const hasCT = group.some((m) => m.side === 'COUNTER-TERRORIST');
+
+              // Se tiver selecionada, assume a cor dela. Se não, verifica se é misto ou de um lado só.
+              const side = selectedInGroup
+                ? displayMarker.side
+                : hasT && hasCT
+                  ? 'MIXED'
+                  : displayMarker.side;
+
+              const isSelected =
+                !!selectedInGroup ||
+                (selectedGroupPos?.x === Math.round(Number(displayMarker.x)) &&
+                  selectedGroupPos?.y === Math.round(Number(displayMarker.y)));
+
               return (
-                <button
-                  key={marker.id}
-                  onClick={(e) => onMarkerClick(marker, e)}
-                  className={`bg-surface-container absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${getMarkerStyles(marker.side, isSelected)}`}
-                  style={{ top: formatCoord(marker.y), left: formatCoord(marker.x) }}
-                >
-                  <span
-                    className="material-symbols-outlined text-xl"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    {marker.type === 'SMOKE'
-                      ? 'cloud'
-                      : marker.type === 'FLASH'
-                        ? 'flare'
-                        : 'local_fire_department'}
-                  </span>
-                </button>
+                <TacticalMarker
+                  key={idx}
+                  x={displayMarker.x}
+                  y={displayMarker.y}
+                  type={displayMarker.type}
+                  side={side}
+                  count={count}
+                  isSelected={isSelected}
+                  onClick={(e) => onMarkerGroupClick(group, e)}
+                  zoom={zoom}
+                />
               );
             })}
 
+            {/* Indicador Hover Fantasma */}
             {hoveredVideo && hoveredVideo.throwX && hoveredVideo.throwY && (
-              <div
-                className="pointer-events-none absolute z-40 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 animate-pulse items-center justify-center rounded-full border-2 border-dashed border-white bg-white/20"
-                style={{ top: `${hoveredVideo.throwY}%`, left: `${hoveredVideo.throwX}%` }}
-              >
-                <span className="material-symbols-outlined text-[12px] text-white">
-                  accessibility_new
-                </span>
-              </div>
+              <TacticalMarker
+                x={hoveredVideo.throwX}
+                y={hoveredVideo.throwY}
+                type="THROW_POS"
+                variant="ghost"
+                zoom={zoom}
+              />
             )}
           </div>
         </div>
-
         <div className="absolute right-4 bottom-4 z-40 flex flex-col gap-2">
           <button
             onClick={handleZoomIn}

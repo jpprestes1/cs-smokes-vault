@@ -145,6 +145,17 @@ body {
 }
 
 /* Custom Utilities for Tactical UI */
+.glass-panel {
+  box-shadow: inset 1px 1px 0px 0px rgba(255, 255, 255, 0.1);
+}
+
+.bg-grid {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
 .radar-grid {
   background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -188,4 +199,36 @@ body {
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Tactical Shimmer Animation */
+.tactical-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.tactical-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(246, 174, 45, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%,
+    transparent 100%
+  );
+  animation: tactical-shimmer 2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes tactical-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }

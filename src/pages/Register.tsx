@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { useTranslation } from 'react-i18next';
+import { auth } from '../lib/firebase';
+import { createUserProfile } from '../features/auth/services/usersService';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Register() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,13 +20,13 @@ export default function Register() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t('auth.passwordsDoNotMatch'));
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('Password should be at least 6 characters.');
+      setError(t('auth.passwordMinLength'));
       setIsLoading(false);
       return;
     }
@@ -32,15 +34,16 @@ export default function Register() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        email: userCredential.user.email,
-        role: 'PLAYER', // Cargo padrão
-        createdAt: new Date().toISOString(),
-      });
+      await createUserProfile(
+        userCredential.user.uid,
+        userCredential.user.email || email,
+        'PLAYER'
+      );
 
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Failed to create account.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : t('auth.createAccountFailed');
+      setError(errorMessage || t('auth.createAccountFailed'));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -54,9 +57,11 @@ export default function Register() {
           <span className="material-symbols-outlined text-primary-container text-4xl">
             person_add
           </span>
-          <h1 className="font-display-lg text-primary text-3xl tracking-tight uppercase">Enlist</h1>
+          <h1 className="font-display-lg text-primary text-3xl tracking-tight uppercase">
+            {t('auth.enlist')}
+          </h1>
           <p className="font-body-base text-on-surface-variant text-sm">
-            Join the tactical database
+            {t('auth.registerSubtitle')}
           </p>
         </div>
 
@@ -68,7 +73,9 @@ export default function Register() {
 
         <form onSubmit={handleRegister} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="font-data-label text-on-surface-variant text-xs">EMAIL</span>
+            <span className="font-data-label text-on-surface-variant text-xs">
+              {t('auth.email')}
+            </span>
             <input
               type="email"
               required
@@ -80,7 +87,9 @@ export default function Register() {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="font-data-label text-on-surface-variant text-xs">PASSWORD</span>
+            <span className="font-data-label text-on-surface-variant text-xs">
+              {t('auth.password')}
+            </span>
             <input
               type="password"
               required
@@ -93,7 +102,7 @@ export default function Register() {
 
           <label className="flex flex-col gap-1">
             <span className="font-data-label text-on-surface-variant text-xs">
-              CONFIRM PASSWORD
+              {t('auth.confirmPassword')}
             </span>
             <input
               type="password"
@@ -114,14 +123,14 @@ export default function Register() {
                 : 'bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(246,174,45,0.4)] active:scale-95'
             }`}
           >
-            {isLoading ? 'ENLISTING...' : 'CREATE ACCOUNT'}
+            {isLoading ? t('auth.enlisting') : t('auth.createAccount')}
           </button>
         </form>
 
         <p className="font-data-label text-on-surface-variant mt-6 text-center text-xs">
-          ALREADY HAVE AN ACCOUNT?{' '}
+          {t('auth.hasAccount')}{' '}
           <Link to="/login" className="text-primary hover:underline">
-            LOGIN
+            {t('auth.login')}
           </Link>
         </p>
       </div>

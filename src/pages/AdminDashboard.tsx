@@ -1,26 +1,21 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { useTranslation } from 'react-i18next';
 import { type UserRole } from '../features/auth/hooks/useAuth';
-
-interface UserProfile {
-  id: string;
-  email: string;
-  role: UserRole;
-}
+import {
+  type UserProfile,
+  getAllUsers,
+  updateUserRole,
+} from '../features/auth/services/usersService';
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'users'));
-        const usersList: UserProfile[] = [];
-        querySnapshot.forEach((doc) => {
-          usersList.push({ id: doc.id, ...doc.data() } as UserProfile);
-        });
+        const usersList = await getAllUsers();
         setUsers(usersList);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -34,14 +29,13 @@ export default function AdminDashboard() {
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, { role: newRole });
+      await updateUserRole(userId, newRole);
 
       // Atualiza o estado local para refletir a mudança instantaneamente
       setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
     } catch (error) {
       console.error('Error updating role:', error);
-      alert('Failed to update role. Check console.');
+      alert(t('admin.updateRoleFailed'));
     }
   };
 
@@ -52,7 +46,7 @@ export default function AdminDashboard() {
           admin_panel_settings
         </span>
         <h1 className="font-display-lg text-on-surface text-3xl tracking-tight uppercase">
-          Admin Dashboard
+          {t('admin.title')}
         </h1>
       </div>
 
@@ -61,16 +55,16 @@ export default function AdminDashboard() {
           <table className="w-full text-left text-sm">
             <thead className="bg-surface-variant/50 font-data-label text-on-surface-variant text-xs uppercase">
               <tr>
-                <th className="px-6 py-4">User Email</th>
-                <th className="px-6 py-4">Current Role</th>
-                <th className="px-6 py-4">Action</th>
+                <th className="px-6 py-4">{t('admin.userEmail')}</th>
+                <th className="px-6 py-4">{t('admin.currentRole')}</th>
+                <th className="px-6 py-4">{t('admin.action')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {isLoading ? (
                 <tr>
                   <td colSpan={3} className="px-6 py-8 text-center">
-                    Loading operatives...
+                    {t('admin.loadingOperatives')}
                   </td>
                 </tr>
               ) : (

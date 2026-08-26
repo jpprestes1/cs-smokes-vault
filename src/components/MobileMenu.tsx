@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MobileMenuProps {
   activeSide: string;
@@ -13,8 +14,15 @@ export default function MobileMenu({
   onAddTactic,
   canCreate,
 }: MobileMenuProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const sides = ['Terrorist', 'Counter-Terrorist', 'All Sides'];
+
+  const sideLabel = (side: string) => {
+    if (side === 'Terrorist') return t('maps.sideT');
+    if (side === 'Counter-Terrorist') return t('maps.sideCt');
+    return t('maps.sideAll');
+  };
 
   return (
     // Mudamos de items-center para items-start para manter tudo na esquerda
@@ -31,7 +39,7 @@ export default function MobileMenu({
               }}
               className={`rounded px-4 py-2 text-left text-sm ${activeSide === side ? 'bg-primary text-on-primary' : 'text-on-surface'}`}
             >
-              {side}
+              {sideLabel(side)}
             </button>
           ))}
           <div className="my-1 border-t border-white/10"></div>
@@ -43,7 +51,8 @@ export default function MobileMenu({
               }}
               className="text-primary flex items-center gap-2 px-4 py-2 text-left text-sm font-bold"
             >
-              <span className="material-symbols-outlined text-sm">add_circle</span> ADD TACTIC
+              <span className="material-symbols-outlined text-sm">add_circle</span>{' '}
+              {t('maps.addTactic').toUpperCase()}
             </button>
           )}
         </div>

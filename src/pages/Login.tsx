@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useTranslation } from 'react-i18next';
 import { auth } from '../lib/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Login() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,8 +20,8 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/'); // Redireciona para a home após o login
-    } catch (err: any) {
-      setError('Invalid email or password. Please try again.');
+    } catch (err: unknown) {
+      setError(t('auth.invalidCredentials'));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -32,10 +34,10 @@ export default function Login() {
         <div className="mb-8 flex flex-col items-center gap-2">
           <span className="material-symbols-outlined text-primary-container text-4xl">lock</span>
           <h1 className="font-display-lg text-primary text-3xl tracking-tight uppercase">
-            Access Vault
+            {t('auth.accessVault')}
           </h1>
           <p className="font-body-base text-on-surface-variant text-sm">
-            Enter your credentials to continue
+            {t('auth.loginSubtitle')}
           </p>
         </div>
 
@@ -47,7 +49,9 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="flex flex-col gap-5">
           <label className="flex flex-col gap-1">
-            <span className="font-data-label text-on-surface-variant text-xs">EMAIL</span>
+            <span className="font-data-label text-on-surface-variant text-xs">
+              {t('auth.email')}
+            </span>
             <input
               type="email"
               required
@@ -59,7 +63,9 @@ export default function Login() {
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="font-data-label text-on-surface-variant text-xs">PASSWORD</span>
+            <span className="font-data-label text-on-surface-variant text-xs">
+              {t('auth.password')}
+            </span>
             <input
               type="password"
               required
@@ -79,14 +85,14 @@ export default function Login() {
                 : 'bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(246,174,45,0.4)] active:scale-95'
             }`}
           >
-            {isLoading ? 'AUTHENTICATING...' : 'LOGIN'}
+            {isLoading ? t('auth.authenticating') : t('auth.login')}
           </button>
         </form>
 
         <p className="font-data-label text-on-surface-variant mt-6 text-center text-xs">
-          DON'T HAVE AN ACCOUNT?{' '}
+          {t('auth.noAccount')}{' '}
           <Link to="/register" className="text-primary hover:underline">
-            REGISTER HERE
+            {t('auth.registerHere')}
           </Link>
         </p>
       </div>
