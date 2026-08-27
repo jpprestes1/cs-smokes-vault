@@ -9,6 +9,8 @@ interface SaveStratModalProps {
   stratTitle: string;
   stratDescription?: string;
   stratSide?: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED';
+  stratIsPublic?: boolean;
+  stratAuthorId?: string | null;
   frames?: StratFrame[];
   paths?: BoardPath[];
   entities?: BoardEntity[];
@@ -18,7 +20,8 @@ interface SaveStratModalProps {
     savedTitle: string,
     savedDescription: string,
     savedSide: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED',
-    stratId: string
+    stratId: string,
+    savedIsPublic: boolean
   ) => void;
 }
 
@@ -27,6 +30,8 @@ export default function SaveStratModal({
   stratTitle,
   stratDescription = '',
   stratSide = 'MIXED',
+  stratIsPublic = true,
+  stratAuthorId = null,
   frames = [],
   paths = [],
   entities = [],
@@ -35,14 +40,19 @@ export default function SaveStratModal({
   onSuccess,
 }: SaveStratModalProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
+  const isCreatorOrAdmin = role === 'CREATOR' || role === 'ADMIN';
+  const isAdmin = role === 'ADMIN';
+  const isOwner = Boolean(user && stratAuthorId && stratAuthorId === user.uid);
+  const canUpdateExisting = Boolean(loadedStratId && (isAdmin || isOwner));
   const canSave = Boolean(user);
 
   const [title, setTitle] = useState(stratTitle || '');
   const [description, setDescription] = useState(stratDescription || '');
   const [side, setSide] = useState<'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED'>(stratSide);
-  const [saveAsNew, setSaveAsNew] = useState(!loadedStratId);
+  const [isPublic, setIsPublic] = useState(isCreatorOrAdmin ? Boolean(stratIsPublic) : false);
+  const [saveAsNew, setSaveAsNew] = useState(!loadedStratId || !canUpdateExisting);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,11 +68,24 @@ export default function SaveStratModal({
       return;
     }
 
+    const effectiveIsPublic = isCreatorOrAdmin ? isPublic : false;
+
     setIsSubmitting(true);
     setError(null);
 
     try {
       if (loadedStratId && !saveAsNew) {
+        if (!canUpdateExisting) {
+          setError(
+            t(
+              'tacticalBoard.cannotEditOthersTactic',
+              'Você só pode editar as suas próprias táticas.'
+            )
+          );
+          setIsSubmitting(false);
+          return;
+        }
+
         // Atualizar estratégia existente
         await updateStrat(loadedStratId, {
           title: title.trim().toUpperCase(),
@@ -71,8 +94,15 @@ export default function SaveStratModal({
           frames,
           paths,
           entities,
+          isPublic: effectiveIsPublic,
         });
-        onSuccess(title.trim().toUpperCase(), description.trim(), side, loadedStratId);
+        onSuccess(
+          title.trim().toUpperCase(),
+          description.trim(),
+          side,
+          loadedStratId,
+          effectiveIsPublic
+        );
       } else {
         // Criar nova estratégia vinculada ao usuário atual
         const newId = await createStrat({
@@ -85,9 +115,9 @@ export default function SaveStratModal({
           entities,
           authorId: user?.uid || '',
           authorEmail: user?.email || '',
-          isPublic: true,
+          isPublic: effectiveIsPublic,
         });
-        onSuccess(title.trim().toUpperCase(), description.trim(), side, newId);
+        onSuccess(title.trim().toUpperCase(), description.trim(), side, newId, effectiveIsPublic);
       }
     } catch (err: unknown) {
       console.error('Erro ao salvar estratégia:', err);
@@ -192,20 +222,82 @@ export default function SaveStratModal({
             />
           </label>
 
+          {/* Opção de Compartilhamento com a Comunidade (Pública vs Privada) */}
+          <div className="bg-surface-variant/20 rounded border border-white/10 p-3">
+            {isCreatorOrAdmin ? (
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={(e) => setIsPublic(e.target.checked)}
+                  className="accent-primary mt-0.5 h-4 w-4 rounded"
+                />
+                <div className="flex flex-col">
+                  <span className="font-data-label text-on-surface text-xs font-bold uppercase">
+                    {t(
+                      'tacticalBoard.shareWithCommunity',
+                      'Compartilhar com a comunidade (Pública)'
+                    )}
+                  </span>
+                  <span className="text-on-surface-variant text-[11px] leading-tight">
+                    {isPublic
+                      ? t(
+                          'tacticalBoard.shareWithCommunityDesc',
+                          'Visível publicamente na Central Comunitária para todos os jogadores.'
+                        )
+                      : t(
+                          'tacticalBoard.privateStratDesc',
+                          'Privada: visível apenas para você na aba Minhas Táticas.'
+                        )}
+                  </span>
+                </div>
+              </label>
+            ) : (
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-on-surface-variant mt-0.5 text-lg">
+                  lock
+                </span>
+                <div className="flex flex-col">
+                  <span className="font-data-label text-on-surface-variant text-xs font-bold uppercase">
+                    {t('tacticalBoard.privateVaultTactic', 'Tática Privada (Cofre Pessoal)')}
+                  </span>
+                  <span className="text-on-surface-variant text-[11px] leading-tight">
+                    {t(
+                      'tacticalBoard.playerOnlyPrivateDesc',
+                      'Sua tática será salva de forma privada na sua conta (Minhas Táticas). Apenas agentes com cargo CREATOR ou ADMIN podem publicar na comunidade.'
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Opção se já existe uma estratégia carregada */}
           {loadedStratId && (
             <div className="bg-surface-container-high/50 rounded border border-white/10 p-3">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={saveAsNew}
-                  onChange={(e) => setSaveAsNew(e.target.checked)}
-                  className="accent-primary rounded"
-                />
-                <span className="font-data-label text-on-surface text-xs">
-                  {t('tacticalBoard.saveAsNewCopy', 'Salvar como uma nova cópia')}
-                </span>
-              </label>
+              {canUpdateExisting ? (
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={saveAsNew}
+                    onChange={(e) => setSaveAsNew(e.target.checked)}
+                    className="accent-primary rounded"
+                  />
+                  <span className="font-data-label text-on-surface text-xs">
+                    {t('tacticalBoard.saveAsNewCopy', 'Salvar como uma nova cópia')}
+                  </span>
+                </label>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-amber-300">
+                  <span className="material-symbols-outlined text-base">info</span>
+                  <span>
+                    {t(
+                      'tacticalBoard.cannotEditOthersTactic',
+                      'Esta tática pertence a outro criador. Ela será salva como uma nova cópia na sua conta.'
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

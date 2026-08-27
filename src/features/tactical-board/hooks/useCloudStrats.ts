@@ -17,5 +17,3 @@ export function useCloudStrats(mapId: string, authorId?: string) {
 
   return { cloudStrats, isLoadingStrats };
 }
-
-

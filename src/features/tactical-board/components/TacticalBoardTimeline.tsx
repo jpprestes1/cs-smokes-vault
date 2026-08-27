@@ -38,7 +38,7 @@ export default function TacticalBoardTimeline({
   const maxIndex = TIMELINE_TIMESTAMPS.length - 1;
 
   return (
-    <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-full border border-white/10 bg-surface-container/90 px-2.5 py-1.5 shadow-2xl backdrop-blur-md select-none sm:gap-2">
+    <div className="bg-surface-container/90 absolute bottom-4 left-1/2 z-30 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1.5 shadow-2xl backdrop-blur-md select-none sm:gap-2">
       {/* Controles de Playback */}
       <div className="flex items-center gap-0.5">
         {/* Recuar 20s */}
@@ -46,7 +46,7 @@ export default function TacticalBoardTimeline({
           type="button"
           onClick={onPrevTime}
           disabled={currentIndex === 0}
-          className="text-on-surface-variant hover:bg-white/10 hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-25"
+          className="text-on-surface-variant hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-25"
           title={t('tacticalBoard.timeline.prevFrame', 'Recuar 20s (←)')}
         >
           <span className="material-symbols-outlined text-[18px]">fast_rewind</span>
@@ -56,12 +56,16 @@ export default function TacticalBoardTimeline({
         <button
           type="button"
           onClick={onTogglePlay}
-          className={`flex h-7 w-7 items-center justify-center rounded-full transition-all active:scale-95 shadow-sm ${
+          className={`flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-all active:scale-95 ${
             isPlaying
-              ? 'bg-primary-container text-surface animate-pulse ring-primary/40 ring-2'
+              ? 'bg-primary-container text-surface ring-primary/40 animate-pulse ring-2'
               : 'bg-primary hover:bg-primary-hover text-surface'
           }`}
-          title={isPlaying ? t('tacticalBoard.timeline.pause', 'Pausar') : t('tacticalBoard.timeline.play', 'Reproduzir')}
+          title={
+            isPlaying
+              ? t('tacticalBoard.timeline.pause', 'Pausar')
+              : t('tacticalBoard.timeline.play', 'Reproduzir')
+          }
         >
           <span className="material-symbols-outlined text-[18px]">
             {isPlaying ? 'pause' : 'play_arrow'}
@@ -73,7 +77,7 @@ export default function TacticalBoardTimeline({
           type="button"
           onClick={onNextTime}
           disabled={currentIndex === maxIndex}
-          className="text-on-surface-variant hover:bg-white/10 hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-25"
+          className="text-on-surface-variant hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-25"
           title={t('tacticalBoard.timeline.nextFrame', 'Avançar 20s (→)')}
         >
           <span className="material-symbols-outlined text-[18px]">fast_forward</span>
@@ -81,7 +85,7 @@ export default function TacticalBoardTimeline({
       </div>
 
       {/* Separador */}
-      <div className="bg-white/10 h-3.5 w-[1px]" />
+      <div className="h-3.5 w-[1px] bg-white/10" />
 
       {/* Segmentos de Tempo */}
       <div className="bg-surface-container-low/80 flex items-center gap-0.5 rounded-full border border-white/5 p-0.5 sm:gap-1">
@@ -98,7 +102,7 @@ export default function TacticalBoardTimeline({
               onClick={() => onSetTime(timestamp)}
               className={`font-data-label relative flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider transition-all ${
                 isActive
-                  ? 'bg-primary text-surface scale-105 shadow-sm font-black'
+                  ? 'bg-primary text-surface scale-105 font-black shadow-sm'
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-white/5'
               }`}
             >
@@ -112,7 +116,7 @@ export default function TacticalBoardTimeline({
       </div>
 
       {/* Separador */}
-      <div className="bg-white/10 h-3.5 w-[1px]" />
+      <div className="h-3.5 w-[1px] bg-white/10" />
 
       {/* Ações Rápidas */}
       <div className="flex items-center gap-0.5">
@@ -121,8 +125,11 @@ export default function TacticalBoardTimeline({
           type="button"
           onClick={onCopyFrameToNext}
           disabled={currentIndex === maxIndex}
-          className="text-on-surface-variant hover:bg-white/10 hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-25"
-          title={t('tacticalBoard.timeline.copyToNextTip', 'Copiar posicionamento para o próximo marco (+20s)')}
+          className="text-on-surface-variant hover:text-primary flex h-7 w-7 items-center justify-center rounded-full transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-25"
+          title={t(
+            'tacticalBoard.timeline.copyToNextTip',
+            'Copiar posicionamento para o próximo marco (+20s)'
+          )}
         >
           <span className="material-symbols-outlined text-[15px]">content_copy</span>
         </button>

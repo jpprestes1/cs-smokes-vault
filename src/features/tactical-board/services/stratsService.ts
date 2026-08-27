@@ -247,3 +247,44 @@ export function subscribeToStratsByMap(
   return unsubscribe;
 }
 
+/**
+ * Busca todas as estratégias públicas do Firestore
+ */
+export async function getAllPublicStrats(): Promise<StratData[]> {
+  const q = query(collection(db, COLLECTION_NAME));
+  const querySnapshot = await getDocs(q);
+  const strats: StratData[] = [];
+  querySnapshot.forEach((d) => {
+    const s = normalizeStrat(d.id, d.data() as Record<string, unknown>);
+    if (s.isPublic !== false) {
+      strats.push(s);
+    }
+  });
+  return strats;
+}
+
+/**
+ * Escuta em tempo real todas as estratégias da coleção para a central comunitária e cofre do usuário
+ */
+export function subscribeToAllPublicStrats(
+  callback: (strats: StratData[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const q = query(collection(db, COLLECTION_NAME));
+
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const parsedStrats = snapshot.docs.map((d) =>
+        normalizeStrat(d.id, d.data() as Record<string, unknown>)
+      );
+      callback(parsedStrats);
+    },
+    (err) => {
+      console.error('Erro ao escutar estratégias da comunidade:', err);
+      if (onError) onError(err);
+    }
+  );
+
+  return unsubscribe;
+}

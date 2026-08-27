@@ -13,10 +13,9 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from =
-    (location.state as { from?: { pathname: string; search?: string } })?.from
-      ? `${(location.state as { from: { pathname: string; search?: string } }).from.pathname}${(location.state as { from: { pathname: string; search?: string } }).from.search || ''}`
-      : '/';
+  const from = (location.state as { from?: { pathname: string; search?: string } })?.from
+    ? `${(location.state as { from: { pathname: string; search?: string } }).from.pathname}${(location.state as { from: { pathname: string; search?: string } }).from.search || ''}`
+    : '/';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
