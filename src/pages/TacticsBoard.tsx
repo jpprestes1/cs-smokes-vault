@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import {
   useTacticalBoard,
@@ -13,7 +14,10 @@ import {
 } from '../features/tactical-board';
 
 export default function TacticsBoard() {
+  const { t } = useTranslation();
   const { mapId } = useParams<{ mapId?: string }>();
+  const [searchParams] = useSearchParams();
+  const stratIdParam = searchParams.get('stratId');
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const isAuthenticated = Boolean(user);
@@ -27,6 +31,7 @@ export default function TacticsBoard() {
     setStratTitle,
     stratDescription,
     stratSide,
+    stratIsPublic,
     paths,
     entities,
     allFramesList,
@@ -34,6 +39,7 @@ export default function TacticsBoard() {
     isPlaying,
     cloudStrats,
     loadedStratId,
+    loadedStratAuthorId,
     isSaveModalOpen,
     setIsSaveModalOpen,
     activeTool,
@@ -69,26 +75,41 @@ export default function TacticsBoard() {
     handleOpenSaveModal,
     handleStratSavedSuccessfully,
     handleExportJson,
+    handleImportJson,
     handleDragStartEntity,
     handleZoomIn,
     handleZoomOut,
     handleResetZoom,
+    showToast,
   } = useTacticalBoard({
     initialMapId: mapId || 'mirage',
+    initialStratId: stratIdParam,
     userId: user?.uid,
     onMapChange: (newMapId) => {
-      navigate(`/strat-board/${newMapId}`, { replace: true });
+      navigate(`/strat-board/editor/${newMapId}`, { replace: true });
     },
   });
+
+  const handleShareStrat = () => {
+    const url = loadedStratId
+      ? `${window.location.origin}/strat-board/editor/${selectedMapId}?stratId=${loadedStratId}`
+      : window.location.href;
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        showToast(t('tacticalBoard.linkCopied', 'Link da tática copiado!'));
+      })
+      .catch(() => {
+        showToast(url);
+      });
+  };
 
   // Atalhos de Teclado
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isInputActive = ['INPUT', 'TEXTAREA'].includes(
-        (e.target as HTMLElement)?.tagName
-      );
+      const isInputActive = ['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName);
 
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
@@ -109,7 +130,14 @@ export default function TacticsBoard() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAuthenticated, handleUndo, setActiveEntityTool, setActiveTool, handlePrevTime, handleNextTime]);
+  }, [
+    isAuthenticated,
+    handleUndo,
+    setActiveEntityTool,
+    setActiveTool,
+    handlePrevTime,
+    handleNextTime,
+  ]);
 
   return (
     <div className="bg-background fixed top-16 left-0 z-30 flex h-[calc(100vh-64px)] w-full overflow-hidden">
@@ -128,6 +156,8 @@ export default function TacticsBoard() {
           stratTitle={stratTitle}
           stratDescription={stratDescription}
           stratSide={stratSide}
+          stratIsPublic={stratIsPublic}
+          stratAuthorId={loadedStratAuthorId}
           frames={allFramesList}
           paths={paths}
           entities={entities}
@@ -140,7 +170,7 @@ export default function TacticsBoard() {
       {/* Botão Mobile para Abrir Sidebar */}
       <button
         onClick={() => setIsMobileSidebarOpen(true)}
-        className="bg-surface-container-high border-primary/30 text-primary fixed bottom-14 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border shadow-2xl md:hidden"
+        className="bg-surface-container-high border-primary/30 text-primary fixed bottom-16 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border shadow-2xl md:hidden"
         title="Open Strat Tools"
       >
         <span className="material-symbols-outlined text-lg">tune</span>
@@ -207,11 +237,24 @@ export default function TacticsBoard() {
           loadedStratId={loadedStratId}
           onSaveStrat={handleOpenSaveModal}
           onExportJson={handleExportJson}
+          onImportJson={handleImportJson}
+          onShareStrat={handleShareStrat}
           disabled={!isAuthenticated}
         />
 
         {/* Viewport Interativo com Radar ou Bloqueio Tático */}
         <div className="relative flex flex-1 overflow-hidden">
+          {/* Botão Flutuante Inferior Esquerdo: Voltar para Central Comunitária */}
+          <button
+            onClick={() => navigate('/strat-board')}
+            className="bg-surface-container-high/90 border-outline-variant hover:border-primary text-on-surface hover:text-primary tactical-glass group absolute bottom-4 left-4 z-30 flex items-center gap-2 rounded-sm border px-3 py-2 text-xs font-bold uppercase shadow-2xl backdrop-blur-md transition-all active:scale-95"
+            title={t('tacticalBoard.backToCommunity', 'Central Comunitária')}
+          >
+            <span className="material-symbols-outlined text-primary text-[18px]">groups</span>
+            <span className="font-data-label tracking-wider">
+              {t('tacticalBoard.communityHub', 'Comunidade')}
+            </span>
+          </button>
           {loading ? (
             <div className="flex h-full w-full flex-1 items-center justify-center">
               <span className="material-symbols-outlined text-primary animate-spin text-4xl">
@@ -219,10 +262,7 @@ export default function TacticsBoard() {
               </span>
             </div>
           ) : !isAuthenticated ? (
-            <TacticalBoardAuthLock
-              radarImage={currentMap.radarImage}
-              mapName={currentMap.name}
-            />
+            <TacticalBoardAuthLock radarImage={currentMap.radarImage} mapName={currentMap.name} />
           ) : (
             <>
               <TacticalBoardCanvas

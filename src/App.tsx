@@ -9,6 +9,7 @@ import AdminRoute from './features/auth/components/AdminRoutes';
 const Home = lazy(() => import('./pages/Home'));
 const MapsView = lazy(() => import('./pages/MapsView'));
 const MapDetail = lazy(() => import('./pages/MapDetail'));
+const StratCommunity = lazy(() => import('./pages/StratCommunity'));
 const TacticsBoard = lazy(() => import('./pages/TacticsBoard'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -41,7 +42,9 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/maps" element={<MapsView />} />
             <Route path="/maps/:mapId/:view?" element={<MapDetail />} />
-            <Route path="/strat-board" element={<TacticsBoard />} />
+            <Route path="/strat-board" element={<StratCommunity />} />
+            <Route path="/strat-board/editor" element={<TacticsBoard />} />
+            <Route path="/strat-board/editor/:mapId" element={<TacticsBoard />} />
             <Route path="/strat-board/:mapId" element={<TacticsBoard />} />
             <Route path="/tactics" element={<Navigate to="/strat-board" replace />} />
             <Route path="/tactics/:mapId" element={<Navigate to="/strat-board" replace />} />

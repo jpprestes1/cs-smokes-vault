@@ -402,7 +402,7 @@ export default function TacticalBoardSidebar({
         <button
           onClick={onUndo}
           disabled={disabled || !canUndo}
-          className="bg-surface-container text-on-surface-variant border-outline-variant hover:text-on-surface hover:bg-surface-variant/50 font-data-label flex w-full items-center justify-center gap-2 rounded-sm border py-2 text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="bg-surface-container text-on-surface-variant border-outline-variant hover:text-on-surface hover:bg-surface-variant/50 font-data-label flex w-full items-center justify-center gap-2 rounded-sm border py-2 text-xs transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <span className="material-symbols-outlined text-[16px]">undo</span>
           {t('tacticalBoard.undo', 'Undo Last')}
@@ -411,7 +411,7 @@ export default function TacticalBoardSidebar({
         <button
           onClick={onClear}
           disabled={disabled}
-          className="bg-error-container/20 text-error hover:bg-error-container/40 border-error/30 font-data-label flex w-full items-center justify-center gap-2 rounded-sm border py-2 text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="bg-error-container/20 text-error hover:bg-error-container/40 border-error/30 font-data-label flex w-full items-center justify-center gap-2 rounded-sm border py-2 text-xs transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <span className="material-symbols-outlined text-[16px]">delete</span>
           {t('tacticalBoard.clear', 'Clear Board')}

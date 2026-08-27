@@ -5,10 +5,11 @@ export { default as TacticalBoardTimeline } from './components/TacticalBoardTime
 export { default as TacticalBoardStatusBar } from './components/TacticalBoardStatusBar';
 export { default as TacticalBoardAuthLock } from './components/TacticalBoardAuthLock';
 export { default as SaveStratModal } from './components/SaveStratModal';
+export { default as StratCard } from './components/StratCard';
+export { default as StratCardSkeleton } from './components/StratCardSkeleton';
+export { useCommunityStrats } from './hooks/useCommunityStrats';
 export { useTacticalBoard } from './hooks/useTacticalBoard';
 export { useCloudStrats } from './hooks/useCloudStrats';
 export { presetStrats } from './data/presetStrats';
 export * from './services/stratsService';
 export * from './types';
-
-

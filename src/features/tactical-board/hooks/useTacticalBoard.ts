@@ -12,10 +12,11 @@ import {
 } from '../types';
 import { mapsDatabase, type MapData } from '../../maps/data/maps';
 import { useCloudStrats } from './useCloudStrats';
-import { deleteStrat } from '../services/stratsService';
+import { deleteStrat, getStratById } from '../services/stratsService';
 
 interface UseTacticalBoardProps {
   initialMapId?: string;
+  initialStratId?: string | null;
   userId?: string;
   onMapChange?: (mapId: string) => void;
 }
@@ -92,6 +93,7 @@ function arrayToFramesMap(
 
 export function useTacticalBoard({
   initialMapId = 'mirage',
+  initialStratId,
   userId,
   onMapChange,
 }: UseTacticalBoardProps = {}) {
@@ -104,6 +106,8 @@ export function useTacticalBoard({
 
   // ID da estratégia salva na nuvem atualmente carregada (se houver)
   const [loadedStratId, setLoadedStratId] = useState<string | null>(null);
+  // Author ID da estratégia carregada
+  const [loadedStratAuthorId, setLoadedStratAuthorId] = useState<string | null>(null);
 
   // Modal de Salvamento
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -114,6 +118,8 @@ export function useTacticalBoard({
   const [stratDescription, setStratDescription] = useState<string>('');
   // Lado da estratégia
   const [stratSide, setStratSide] = useState<'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED'>('MIXED');
+  // Flag de visibilidade pública na comunidade
+  const [stratIsPublic, setStratIsPublic] = useState<boolean>(true);
 
   // Timeline: Tempo atual em segundos (0, 20, 40, 60, 80, 100)
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -131,9 +137,11 @@ export function useTacticalBoard({
     setPrevInitialMapId(initialMapId);
     setSelectedMapId(initialMapId);
     setLoadedStratId(null);
+    setLoadedStratAuthorId(null);
     setStratTitle('UNTITLED_STRAT');
     setStratDescription('');
     setStratSide('MIXED');
+    setStratIsPublic(true);
     setFrames(createDefaultFrames());
     setCurrentTime(0);
     setIsPlaying(false);
@@ -173,7 +181,9 @@ export function useTacticalBoard({
       for (const key of TIMELINE_TIMESTAMPS) {
         clone[key] = {
           entities: frames[key]?.entities ? frames[key].entities.map((e) => ({ ...e })) : [],
-          paths: frames[key]?.paths ? frames[key].paths.map((p) => ({ ...p, points: [...p.points] })) : [],
+          paths: frames[key]?.paths
+            ? frames[key].paths.map((p) => ({ ...p, points: [...p.points] }))
+            : [],
         };
       }
       return [...prev.slice(-20), clone];
@@ -248,9 +258,7 @@ export function useTacticalBoard({
         ...prev,
         [currentTime]: {
           ...prev[currentTime],
-          entities: currentEntities.map((e) =>
-            e.id === entityId ? { ...e, ...updates } : e
-          ),
+          entities: currentEntities.map((e) => (e.id === entityId ? { ...e, ...updates } : e)),
         },
       };
     });
@@ -300,9 +308,11 @@ export function useTacticalBoard({
     pushHistory();
     setFrames(createDefaultFrames());
     setLoadedStratId(null);
+    setLoadedStratAuthorId(null);
     setStratTitle('UNTITLED_STRAT');
     setStratDescription('');
     setStratSide('MIXED');
+    setStratIsPublic(true);
     showToast(t('tacticalBoard.boardCleared', 'Quadro limpo!'));
   };
 
@@ -318,7 +328,8 @@ export function useTacticalBoard({
 
   // Copiar entidades e desenhos do frame atual para o próximo marco (+20s)
   const handleCopyFrameToNext = () => {
-    const nextIndex = TIMELINE_TIMESTAMPS.indexOf(currentTime as typeof TIMELINE_TIMESTAMPS[number]) + 1;
+    const nextIndex =
+      TIMELINE_TIMESTAMPS.indexOf(currentTime as (typeof TIMELINE_TIMESTAMPS)[number]) + 1;
     if (nextIndex >= TIMELINE_TIMESTAMPS.length) {
       showToast(t('tacticalBoard.lastFrameReached', 'Já está no último marco temporal.'));
       return;
@@ -334,25 +345,29 @@ export function useTacticalBoard({
       },
     }));
     setCurrentTime(nextTime);
-    showToast(t('tacticalBoard.frameCopied', { nextTime: `${Math.floor(nextTime / 60)}:${String(nextTime % 60).padStart(2, '0')}` }));
+    showToast(
+      t('tacticalBoard.frameCopied', {
+        nextTime: `${Math.floor(nextTime / 60)}:${String(nextTime % 60).padStart(2, '0')}`,
+      })
+    );
   };
 
   // Navegação da Timeline
   const handleSetCurrentTime = (time: number) => {
-    if (TIMELINE_TIMESTAMPS.includes(time as typeof TIMELINE_TIMESTAMPS[number])) {
+    if (TIMELINE_TIMESTAMPS.includes(time as (typeof TIMELINE_TIMESTAMPS)[number])) {
       setCurrentTime(time);
     }
   };
 
   const handleNextTime = () => {
-    const idx = TIMELINE_TIMESTAMPS.indexOf(currentTime as typeof TIMELINE_TIMESTAMPS[number]);
+    const idx = TIMELINE_TIMESTAMPS.indexOf(currentTime as (typeof TIMELINE_TIMESTAMPS)[number]);
     if (idx < TIMELINE_TIMESTAMPS.length - 1) {
       setCurrentTime(TIMELINE_TIMESTAMPS[idx + 1]);
     }
   };
 
   const handlePrevTime = () => {
-    const idx = TIMELINE_TIMESTAMPS.indexOf(currentTime as typeof TIMELINE_TIMESTAMPS[number]);
+    const idx = TIMELINE_TIMESTAMPS.indexOf(currentTime as (typeof TIMELINE_TIMESTAMPS)[number]);
     if (idx > 0) {
       setCurrentTime(TIMELINE_TIMESTAMPS[idx - 1]);
     }
@@ -367,7 +382,7 @@ export function useTacticalBoard({
     if (isPlaying) {
       playTimerRef.current = window.setInterval(() => {
         setCurrentTime((prevTime) => {
-          const idx = TIMELINE_TIMESTAMPS.indexOf(prevTime as typeof TIMELINE_TIMESTAMPS[number]);
+          const idx = TIMELINE_TIMESTAMPS.indexOf(prevTime as (typeof TIMELINE_TIMESTAMPS)[number]);
           if (idx >= TIMELINE_TIMESTAMPS.length - 1) {
             return TIMELINE_TIMESTAMPS[0]; // Loop para o início
           }
@@ -408,15 +423,80 @@ export function useTacticalBoard({
     setStratTitle(preset.title);
     setStratDescription(preset.description || '');
     setStratSide(preset.side || 'MIXED');
+    setStratIsPublic(true);
     setFrames(arrayToFramesMap(preset.frames, preset.entities || [], preset.paths || []));
     setCurrentTime(0);
     setIsPlaying(false);
     setLoadedStratId(null);
+    setLoadedStratAuthorId(null);
     if (onMapChange) {
       onMapChange(preset.mapId);
     }
     showToast(t('tacticalBoard.presetLoaded', { title: preset.title }));
   };
+
+  // Carregar Estratégia por ID (Firestore)
+  const handleLoadStratById = useCallback(
+    async (stratId: string) => {
+      try {
+        const strat = await getStratById(stratId);
+        if (strat) {
+          pushHistory();
+          setSelectedMapId(strat.mapId);
+          setStratTitle(strat.title);
+          setStratDescription(strat.description || '');
+          const validSide =
+            strat.side === 'TERRORIST' || strat.side === 'COUNTER-TERRORIST' ? strat.side : 'MIXED';
+          setStratSide(validSide);
+          setStratIsPublic(strat.isPublic !== false);
+          setFrames(arrayToFramesMap(strat.frames, strat.entities || [], strat.paths || []));
+          setCurrentTime(0);
+          setIsPlaying(false);
+          setLoadedStratId(strat.id);
+          setLoadedStratAuthorId(strat.authorId || null);
+          if (onMapChange && strat.mapId !== selectedMapId) {
+            onMapChange(strat.mapId);
+          }
+          showToast(t('tacticalBoard.stratLoaded', { title: strat.title }));
+        }
+      } catch (err) {
+        console.error('Erro ao carregar estratégia por ID:', err);
+      }
+    },
+    [onMapChange, pushHistory, selectedMapId, showToast, t]
+  );
+
+  // Carrega automaticamente a estratégia se initialStratId for fornecido
+  useEffect(() => {
+    let isCancelled = false;
+    if (initialStratId) {
+      getStratById(initialStratId)
+        .then((strat) => {
+          if (!isCancelled && strat) {
+            setSelectedMapId(strat.mapId);
+            setStratTitle(strat.title);
+            setStratDescription(strat.description || '');
+            const validSide =
+              strat.side === 'TERRORIST' || strat.side === 'COUNTER-TERRORIST'
+                ? strat.side
+                : 'MIXED';
+            setStratSide(validSide);
+            setStratIsPublic(strat.isPublic !== false);
+            setFrames(arrayToFramesMap(strat.frames, strat.entities || [], strat.paths || []));
+            setCurrentTime(0);
+            setIsPlaying(false);
+            setLoadedStratId(strat.id);
+            setLoadedStratAuthorId(strat.authorId || null);
+          }
+        })
+        .catch((err) => {
+          console.error('Erro ao carregar estratégia inicial:', err);
+        });
+    }
+    return () => {
+      isCancelled = true;
+    };
+  }, [initialStratId]);
 
   // Carregar Estratégia Salva no Firestore
   const handleSelectCloudStrat = (strat: StratData) => {
@@ -425,14 +505,14 @@ export function useTacticalBoard({
     setStratTitle(strat.title);
     setStratDescription(strat.description || '');
     const validSide =
-      strat.side === 'TERRORIST' || strat.side === 'COUNTER-TERRORIST'
-        ? strat.side
-        : 'MIXED';
+      strat.side === 'TERRORIST' || strat.side === 'COUNTER-TERRORIST' ? strat.side : 'MIXED';
     setStratSide(validSide);
+    setStratIsPublic(strat.isPublic !== false);
     setFrames(arrayToFramesMap(strat.frames, strat.entities || [], strat.paths || []));
     setCurrentTime(0);
     setIsPlaying(false);
     setLoadedStratId(strat.id);
+    setLoadedStratAuthorId(strat.authorId || null);
     if (onMapChange && strat.mapId !== selectedMapId) {
       onMapChange(strat.mapId);
     }
@@ -463,12 +543,15 @@ export function useTacticalBoard({
     savedTitle: string,
     savedDescription: string,
     savedSide: 'TERRORIST' | 'COUNTER-TERRORIST' | 'MIXED',
-    stratId: string
+    stratId: string,
+    savedIsPublic: boolean = true
   ) => {
     setStratTitle(savedTitle);
     setStratDescription(savedDescription);
     setStratSide(savedSide);
+    setStratIsPublic(savedIsPublic);
     setLoadedStratId(stratId);
+    setLoadedStratAuthorId(userId || null);
     setIsSaveModalOpen(false);
     showToast(t('tacticalBoard.stratSaved', 'Estratégia salva com sucesso!'));
   };
@@ -503,6 +586,97 @@ export function useTacticalBoard({
     showToast(t('tacticalBoard.jsonExported', 'Arquivo JSON baixado!'));
   };
 
+  // Importar JSON
+  const handleImportJson = async (file: File): Promise<boolean> => {
+    try {
+      if (!file.name.toLowerCase().endsWith('.json')) {
+        showToast(
+          t(
+            'tacticalBoard.invalidJsonFormat',
+            'Arquivo inválido. Selecione um arquivo com extensão .json'
+          )
+        );
+        return false;
+      }
+
+      const text = await file.text();
+      let data: unknown;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        showToast(
+          t('tacticalBoard.invalidJsonFormat', 'Arquivo JSON corrompido ou com formato inválido.')
+        );
+        return false;
+      }
+
+      // Validação estrita do padrão do Tactical Vault
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        typeof (data as Record<string, unknown>).title !== 'string' ||
+        typeof (data as Record<string, unknown>).mapId !== 'string'
+      ) {
+        showToast(
+          t(
+            'tacticalBoard.invalidJsonFormat',
+            'Arquivo JSON não reconhecido. Certifique-se de que é uma tática exportada pelo Tactical Vault.'
+          )
+        );
+        return false;
+      }
+
+      const parsedData = data as Record<string, unknown>;
+      const rawMapId = String(parsedData.mapId).toLowerCase().trim();
+      const matchedMap = mapsDatabase.find(
+        (m) => m.id.toLowerCase() === rawMapId || m.name.toLowerCase() === rawMapId
+      );
+      const targetMapId = matchedMap ? matchedMap.id : rawMapId;
+
+      const rawFrames = Array.isArray(parsedData.frames) ? (parsedData.frames as StratFrame[]) : [];
+      const rawEntities = Array.isArray(parsedData.entities)
+        ? (parsedData.entities as BoardEntity[])
+        : [];
+      const rawPaths = Array.isArray(parsedData.paths) ? (parsedData.paths as BoardPath[]) : [];
+
+      if (rawFrames.length === 0 && rawEntities.length === 0 && rawPaths.length === 0) {
+        showToast(
+          t(
+            'tacticalBoard.invalidJsonFormat',
+            'Arquivo JSON não contém dados táticos (frames, entidades ou trajetórias).'
+          )
+        );
+        return false;
+      }
+
+      pushHistory();
+      setSelectedMapId(targetMapId);
+      setStratTitle(String(parsedData.title).toUpperCase().trim());
+      setStratDescription(typeof parsedData.description === 'string' ? parsedData.description : '');
+      const sideStr = String(parsedData.side || 'MIXED').toUpperCase();
+      const validSide =
+        sideStr === 'TERRORIST' || sideStr === 'COUNTER-TERRORIST' ? sideStr : 'MIXED';
+      setStratSide(validSide);
+      setStratIsPublic(parsedData.isPublic !== undefined ? Boolean(parsedData.isPublic) : true);
+      setFrames(arrayToFramesMap(rawFrames, rawEntities, rawPaths));
+      setCurrentTime(0);
+      setIsPlaying(false);
+      setLoadedStratId(null);
+      setLoadedStratAuthorId(null);
+
+      if (onMapChange && targetMapId !== selectedMapId) {
+        onMapChange(targetMapId);
+      }
+
+      showToast(t('tacticalBoard.jsonImported', 'Tática importada com sucesso via JSON!'));
+      return true;
+    } catch (err) {
+      console.error('Erro ao importar tática JSON:', err);
+      showToast(t('tacticalBoard.invalidJsonFormat', 'Erro ao importar arquivo JSON.'));
+      return false;
+    }
+  };
+
   // Drag & Drop
   const handleDragStartEntity = (e: React.DragEvent, type: EntityType) => {
     e.dataTransfer.setData('application/cs-tactical-entity', type);
@@ -522,6 +696,8 @@ export function useTacticalBoard({
     setStratDescription,
     stratSide,
     setStratSide,
+    stratIsPublic,
+    setStratIsPublic,
     paths,
     entities,
     frames,
@@ -530,6 +706,7 @@ export function useTacticalBoard({
     isPlaying,
     cloudStrats,
     loadedStratId,
+    loadedStratAuthorId,
     isSaveModalOpen,
     setIsSaveModalOpen,
     activeTool,
@@ -561,10 +738,12 @@ export function useTacticalBoard({
     handleSelectMap,
     handleSelectPreset,
     handleSelectCloudStrat,
+    handleLoadStratById,
     handleDeleteCloudStrat,
     handleOpenSaveModal,
     handleStratSavedSuccessfully,
     handleExportJson,
+    handleImportJson,
     handleDragStartEntity,
     handleZoomIn,
     handleZoomOut,
@@ -572,4 +751,3 @@ export function useTacticalBoard({
     showToast,
   };
 }
-

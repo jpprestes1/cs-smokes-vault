@@ -20,7 +20,7 @@ export default function TacticalBoardAuthLock({
         {/* Fundo do Radar com Blur Intenso e Grayscale */}
         {radarImage && (
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-15 grayscale filter blur-[3px]"
+            className="absolute inset-0 bg-cover bg-center opacity-15 blur-[3px] grayscale filter"
             style={{ backgroundImage: `url('${radarImage}')` }}
           />
         )}
@@ -40,11 +40,11 @@ export default function TacticalBoardAuthLock({
         <div className="border-primary/60 pointer-events-none absolute top-3 left-3 h-4 w-4 border-t-2 border-l-2" />
         <div className="border-primary/60 pointer-events-none absolute top-3 right-3 h-4 w-4 border-t-2 border-r-2" />
         <div className="border-primary/60 pointer-events-none absolute bottom-3 left-3 h-4 w-4 border-b-2 border-l-2" />
-        <div className="border-primary/60 pointer-events-none absolute bottom-3 right-3 h-4 w-4 border-b-2 border-r-2" />
+        <div className="border-primary/60 pointer-events-none absolute right-3 bottom-3 h-4 w-4 border-r-2 border-b-2" />
 
         {/* Header HUD do Painel */}
         <div className="font-data-label text-outline-variant absolute top-4 left-6 flex items-center gap-2 text-[10px] tracking-widest uppercase">
-          <span className="bg-error inline-block h-1.5 w-1.5 rounded-full animate-pulse" />
+          <span className="bg-error inline-block h-1.5 w-1.5 animate-pulse rounded-full" />
           <span>MAP: {mapName.toUpperCase()} // SECTOR_LOCKED</span>
         </div>
 
@@ -54,7 +54,7 @@ export default function TacticalBoardAuthLock({
           <div className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-amber-500/40 bg-amber-500/10 shadow-[0_0_30px_rgba(246,174,45,0.25)]">
             <span className="material-symbols-outlined text-primary text-3xl">lock</span>
             <span className="absolute -top-1 -right-1 flex h-4 w-4">
-              <span className="bg-error absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" />
+              <span className="bg-error absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
               <span className="bg-error relative inline-flex h-4 w-4 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
             </span>
           </div>
@@ -77,7 +77,7 @@ export default function TacticalBoardAuthLock({
             <Link
               to="/login"
               state={{ from: location }}
-              className="bg-primary text-on-primary hover:shadow-[0_0_20px_rgba(246,174,45,0.5)] font-headline-md flex h-10 w-full items-center justify-center gap-2 rounded-sm text-xs font-black tracking-wider uppercase transition-all active:scale-95 sm:flex-1"
+              className="bg-primary text-on-primary font-headline-md flex h-10 w-full items-center justify-center gap-2 rounded-sm text-xs font-black tracking-wider uppercase transition-all hover:shadow-[0_0_20px_rgba(246,174,45,0.5)] active:scale-95 sm:flex-1"
             >
               <span className="material-symbols-outlined text-[18px]">login</span>
               {t('nav.login', 'Entrar')}
