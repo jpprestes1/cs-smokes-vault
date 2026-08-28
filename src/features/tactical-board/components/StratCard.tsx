@@ -158,12 +158,12 @@ export default function StratCard({
             {/* Tag Visibilidade (se for privada ou se for o proprietário) */}
             {strat.isPublic === false ? (
               <span className="font-data-label text-on-surface-variant flex items-center gap-1 rounded-sm border border-neutral-700 bg-neutral-800/80 px-2 py-0.5 text-[10px] font-bold uppercase">
-                <span className="material-symbols-outlined text-[12px]">lock</span>
+                <span className="material-symbols-outlined !text-[12px]">lock</span>
                 {t('tacticalBoard.private', 'Privada')}
               </span>
             ) : isOwner ? (
               <span className="font-data-label flex items-center gap-1 rounded-sm border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 uppercase">
-                <span className="material-symbols-outlined text-[12px]">public</span>
+                <span className="material-symbols-outlined !text-[12px]">public</span>
                 {t('tacticalBoard.public', 'Pública')}
               </span>
             ) : null}
@@ -197,12 +197,6 @@ export default function StratCard({
 
         {/* Pílulas de Conteúdo Tático (Jogadores, Utilitários, Trajetórias) */}
         <div className="font-data-label mt-4 flex flex-wrap items-center gap-1.5 text-[10px]">
-          {(stats.playersT > 0 || stats.playersCt > 0) && (
-            <span className="bg-surface-variant/30 text-on-surface flex items-center gap-1 rounded-sm border border-white/5 px-2 py-0.5 font-medium">
-              <span className="material-symbols-outlined text-[13px]">person</span>
-              {stats.playersT + stats.playersCt}
-            </span>
-          )}
 
           {stats.smokes > 0 && (
             <span className="flex items-center gap-1 rounded-sm border border-neutral-500/20 bg-neutral-500/10 px-2 py-0.5 font-medium text-neutral-300">
@@ -227,7 +221,7 @@ export default function StratCard({
 
           {stats.heGrenades > 0 && (
             <span className="flex items-center gap-1 rounded-sm border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-300">
-              <span className="material-symbols-outlined text-[13px]">sports_volleyball</span>
+              <span className="material-symbols-outlined text-[13px]">bomb</span>
               {stats.heGrenades} HE{stats.heGrenades > 1 ? 's' : ''}
             </span>
           )}
